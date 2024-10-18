@@ -42,7 +42,7 @@ spec:
             {{- if .Values.workflowService.migration }}
             - name: migration-init-container
               image: {{ .Values.workflowService.image.registry }}/{{ .Values.workflowService.image.repository }}:{{ .Values.workflowService.image.tag }}
-              command: ['npm','run','db:init']
+              command: ['npm','run','db:reset:dev:with-data']
               envFrom:
                 - configMapRef:
                     name: {{ .Values.workflowService.nameOverride }}

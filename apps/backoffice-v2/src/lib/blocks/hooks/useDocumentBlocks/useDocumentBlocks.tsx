@@ -369,7 +369,7 @@ export const useDocumentBlocks = ({
                 type: 'details',
                 value: {
                   id,
-                  title: `${category} - ${docType}`,
+                  title: `${category} - ${docType}-RR`,
                   data: Object.entries(
                     {
                       ...additionalProperties,

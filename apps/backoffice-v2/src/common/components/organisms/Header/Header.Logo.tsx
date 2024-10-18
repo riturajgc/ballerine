@@ -13,7 +13,9 @@ import { Skeleton } from '@ballerine/ui';
  */
 export const Logo: FunctionComponent = () => {
   const { data: customer, isLoading } = useCustomerQuery();
-  const imageUrl = customer?.logoImageUri ?? env.VITE_IMAGE_LOGO_URL;
+  const imageUrl = '/images/gc_logo-270 (1).png';
+  // apps/backoffice-v2/src/common/components/organisms/Header/Header.Logo.tsx
+  // apps/backoffice-v2/public/images/mock-documents/set_3_selfie.png
   const urlToRoot = useRedirectToRootUrl();
 
   return (

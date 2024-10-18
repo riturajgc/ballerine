@@ -82,6 +82,7 @@ export const Entities: FunctionComponent = () => {
           <Case.Actions id={''} fullName={''} avatarUrl={''} />
 
           <Case.Content>
+            <div>Hello ino</div>
             <div>
               <Case.FaceMatch faceAUrl={''} faceBUrl={''} isLoading />
               <Case.Info info={{}} isLoading whitelist={[]} />

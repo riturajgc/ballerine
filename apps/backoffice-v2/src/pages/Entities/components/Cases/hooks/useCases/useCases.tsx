@@ -49,7 +49,7 @@ export const useCases = () => {
     () => workflow?.workflowDefinition.definition.states,
     [workflow?.workflowDefinition.definition.states],
   );
-
+  console.log('here states: ', states);
   const statuses = useMemo(
     () => [
       ...new Set(
@@ -60,6 +60,8 @@ export const useCases = () => {
     ],
     [states],
   );
+  console.log('here: ', statuses);
+  console.log('here 1 ', tagToBadgeData);
 
   const { data: users } = useUsersQuery();
 

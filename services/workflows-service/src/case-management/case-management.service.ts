@@ -47,6 +47,7 @@ export class CaseManagementService {
       workflowDefinitionId: actionResult[0]!.workflowDefinition.id,
       workflowRuntimeId: actionResult[0]!.workflowRuntimeData.id,
       ballerineEntityId: actionResult[0]!.ballerineEntityId,
+      workflowToken: actionResult[0]!.workflowToken,
     };
   }
 

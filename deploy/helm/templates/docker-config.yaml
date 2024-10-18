@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ballerine-docker-config
+  namespace: {{.Release.Namespace}}
+data:
+  .dockerconfigjson:
+    {{ if .Files.Glob "auth.docker.json" }}{{ .Files.Get "auth.docker.json" | b64enc }}
+    {{- else }}{{- printf "{ \"auths\": { \"https://index.docker.io/v1/\": { \"auth\": \"%s\" } } }" (printf "%s:%s" .Values.image.hubCredentials.username .Values.image.hubCredentials.password | b64enc) | b64enc }}{{- end }}
+type: kubernetes.io/dockerconfigjson

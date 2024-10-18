@@ -14,7 +14,9 @@ import { camelCase } from 'string-ts';
 export const DefaultBlocks = () => {
   const { blocks, tabs, activeTab, getUpdatedSearchParamsWithActiveTab, isLoading } =
     useDefaultBlocksLogic();
-
+  console.log('blocks: ', blocks);
+  console.log('tabs: ', tabs);
+  console.log('activeTab: ', activeTab);
   return (
     <div className="relative flex h-full flex-col">
       {!!tabs.length && (

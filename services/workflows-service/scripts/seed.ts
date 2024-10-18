@@ -35,6 +35,8 @@ import { generateKycManualReviewRuntimeAndToken } from './workflows/runtime/gene
 import { generateInitialCollectionFlowExample } from './workflows/runtime/generate-initial-collection-flow-example';
 import { uiKybParentWithAssociatedCompanies } from './workflows/ui-definition/kyb-with-associated-companies/ui-kyb-parent-dynamic-example';
 import { generateWebsiteMonitoringExample } from './workflows/website-monitoring-workflow';
+import { nboardDefinition } from './workflows/nboard-workflow';
+import { eformDefinition } from './workflows/eform-defition';
 
 const BCRYPT_SALT: string | number = 10;
 
@@ -154,6 +156,11 @@ async function seed() {
   const manualMachineVersion = 1;
 
   const kycWorkflowDefinitionId = 'kyc-manual-review';
+  const nboardWorkflowDefinitionId = 'nboard-review';
+  const nboardManualMachineId = 'nboard-MANUAL_REVIEW_0002zpeid7bq9aaa';
+
+  const eformWorkflowDefinitionId = 'eform-customer-onboarding';
+  const eformManualMachineId = 'eform-customer-onboarding-MANUAL_REVIEW_0002zpeid7bq9aaa';
 
   const onboardingMachineKycId = 'COLLECT_DOCS_b0002zpeid7bq9aaa';
   const onboardingMachineKybId = 'COLLECT_DOCS_b0002zpeid7bq9bbb';
@@ -479,6 +486,45 @@ async function seed() {
       projectId: project1.id,
     },
   });
+  const getDocumentsSchema = () =>
+    ['id_card', 'passport', 'drivers_license', 'voter_id','eida','trade_license'].map(name => ({
+      category: name,
+      type: name,
+      issuer: { country: 'ZZ' },
+      issuingVersion: 1,
+      version: 1,
+      propertiesSchema: Type.Object({
+        firstName: Type.Optional(Type.String()),
+        lastName: Type.Optional(Type.String()),
+        documentNumber: Type.Optional(Type.String()),
+        dateOfBirth: Type.Optional(Type.String({ format: 'date' })),
+        expirationDate: Type.Optional(Type.String({ format: 'date' })),
+        isFaceMatching: Type.Optional(Type.Boolean()),
+        isNameAsTradeLicense: Type.Optional(Type.Boolean()),
+      }),
+    }));
+
+  // eform-kyb
+  await client.workflowDefinition.create({
+    data: {
+      id: eformWorkflowDefinitionId, // should be auto generated normally
+      name: 'eform-kyb',
+      version: 1,
+      definitionType: 'statechart-json',
+      config: {
+        completedWhenTasksResolved: true,
+        workflowLevelResolution: false,
+        allowMultipleActiveWorkflows: false,
+      },
+      contextSchema: {
+        type: 'json-schema',
+        schema: defaultContextSchema,
+      },
+      definition: eformDefinition,
+      documentsSchema: getDocumentsSchema(),
+      projectId: project1.id,
+    },
+  });
 
   const baseReviewDefinition = (stateDefinition: InputJsonValue) =>
     ({
@@ -604,23 +650,7 @@ async function seed() {
     },
   });
 
-  const getDocumentsSchema = () =>
-    ['id_card', 'passport', 'drivers_license', 'voter_id','eida','trade_license'].map(name => ({
-      category: name,
-      type: name,
-      issuer: { country: 'ZZ' },
-      issuingVersion: 1,
-      version: 1,
-      propertiesSchema: Type.Object({
-        firstName: Type.Optional(Type.String()),
-        lastName: Type.Optional(Type.String()),
-        documentNumber: Type.Optional(Type.String()),
-        dateOfBirth: Type.Optional(Type.String({ format: 'date' })),
-        expirationDate: Type.Optional(Type.String({ format: 'date' })),
-        isFaceMatching: Type.Optional(Type.Boolean()),
-        isNameAsTradeLicense: Type.Optional(Type.Boolean()),
-      }),
-    }));
+
 
   await client.workflowDefinition.create({
     data: {
@@ -657,6 +687,49 @@ async function seed() {
         ],
       },
       version: 3,
+      projectId: project1.id,
+    },
+  });
+
+  // nBoard
+  await client.workflowDefinition.create({
+    data: {
+      reviewMachineId: nboardManualMachineId,
+      name: 'nboard',
+      version: 1,
+      definitionType: 'statechart-json',
+      definition: nboardDefinition,
+      id: nboardWorkflowDefinitionId,
+      documentsSchema: getDocumentsSchema(),
+      config: {
+        workflowLevelResolution: false,
+        availableDocuments: [
+          {
+            category: 'id_card',
+            type: 'id_card',
+          },
+          {
+            category: 'passport',
+            type: 'passport',
+          },
+          {
+            category: 'drivers_license',
+            type: 'drivers_license',
+          },
+          {
+            category: 'voter_id',
+            type: 'voter_id',
+          },
+          {
+            category: 'eida',
+            type: 'eida',
+          },
+          {
+            category: 'trade_license',
+            type: 'trade_license',
+          },
+        ],
+      },
       projectId: project1.id,
     },
   });
@@ -826,6 +899,54 @@ async function seed() {
     project1.id,
   );
 
+  await createFilter(
+    "KYB with GC EFORMs 1",
+    'businesses',
+    {
+      select: {
+        id: true,
+        status: true,
+        assigneeId: true,
+        createdAt: true,
+        context: true,
+        state: true,
+        tags: true,
+        ...baseFilterDefinitionSelect,
+        ...baseFilterBusinessSelect,
+        ...baseFilterAssigneeSelect,
+      },
+      where: {
+        workflowDefinitionId: { in: ['eform-customer-onboarding'] },
+        businessId: { not: null },
+      },
+    },
+    project1.id,
+  );
+
+  await createFilter(
+    'Nboard - Manual Review',
+    'individuals',
+    {
+      select: {
+        id: true,
+        status: true,
+        assigneeId: true,
+        context: true,
+        createdAt: true,
+        state: true,
+        tags: true,
+        ...baseFilterDefinitionSelect,
+        ...baseFilterEndUserSelect,
+        ...baseFilterAssigneeSelect,
+      },
+      where: {
+        workflowDefinitionId: { in: [nboardWorkflowDefinitionId] },
+        endUserId: { not: null },
+      },
+    },
+    project1.id,
+  );
+
   // KYB Onboarding
   await client.workflowDefinition.create({
     data: {
@@ -946,6 +1067,8 @@ async function seed() {
     },
     project1.id,
   );
+
+
 
   await client.$transaction(async tx => {
     businessRiskIds.map(async (id, index) => {
@@ -1097,7 +1220,7 @@ async function createUsers({ project1, project2 }: any, client: PrismaClient) {
       firstName: faker.name.firstName(),
       lastName: faker.name.lastName(),
       password: await hash('agent3', BCRYPT_SALT),
-      roles: ['user'],
+      roles: ['user', 'customer','admin'],
       avatarUrl: null,
       userToProjects: {
         create: { projectId: project1.id },

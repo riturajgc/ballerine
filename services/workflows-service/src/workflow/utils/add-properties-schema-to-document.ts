@@ -43,13 +43,16 @@ export const addPropertiesSchemaToDocument = (
   document: DefaultContextSchema['documents'][number],
   documentSchema: WorkflowDefinition['documentsSchema'],
 ) => {
+  console.log('documentSchema: ', documentSchema)
   // when does not have document specific for specific country/category -> go to default
   const propertiesSchemaFromDefinition =
     documentSchema &&
     getPropertiesFromDefinition(document, documentSchema as TDocument[], document?.issuer?.country);
+    console.log('propertiesSchemaFromDefinition: ', propertiesSchemaFromDefinition)
   const propertiesSchema =
     propertiesSchemaFromDefinition || getPropertiesSchemaForDocument(document);
-
+  console.log('propertiesSchema: ', propertiesSchema)
+  console.log('document: ', document)
   return {
     ...document,
     propertiesSchema,

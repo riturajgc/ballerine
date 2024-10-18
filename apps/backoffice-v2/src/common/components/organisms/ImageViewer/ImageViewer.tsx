@@ -31,6 +31,7 @@ export const ImageViewer: FunctionComponent<IImageViewerProps> & IImageViewerChi
   onSelectImage,
   ...rest
 }) => {
+  console.log('rest: ', selectedImage);
   return (
     <div className={ctw(`flex h-full flex-col items-center gap-y-8`, className)} {...rest}>
       <Provider selectedImage={selectedImage} onSelectImage={onSelectImage}>

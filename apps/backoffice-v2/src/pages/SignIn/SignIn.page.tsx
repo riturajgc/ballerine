@@ -60,11 +60,7 @@ export const SignIn: FunctionComponent = () => {
   return (
     <section className={`flex h-full flex-col items-center justify-center`}>
       <div className={`mb-16`}>
-        {env.VITE_IMAGE_LOGO_URL ? (
-          <img className={`w-40`} src={env.VITE_IMAGE_LOGO_URL} />
-        ) : (
-          <BallerineLogo />
-        )}
+        <img className={`w-40`} src="/images/gc_logo-270 (1).png" />
       </div>
       <Card className={`w-full max-w-lg`}>
         <CardHeader className={`mb-2 text-center text-4xl font-bold`}>Sign In</CardHeader>

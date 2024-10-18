@@ -338,11 +338,12 @@ export class WorkflowControllerExternal {
         salesforceRecordId: body.salesforceRecordId,
       }),
     });
-
+    console.log('workflowToken: ', actionResult[0]!.workflowToken)
     return res.json({
       workflowDefinitionId: actionResult[0]!.workflowDefinition.id,
       workflowRuntimeId: actionResult[0]!.workflowRuntimeData.id,
       ballerineEntityId: actionResult[0]!.ballerineEntityId,
+      workflowToken: actionResult[0]!.workflowToken,
       entities: actionResult[0]!.entities,
     });
   }

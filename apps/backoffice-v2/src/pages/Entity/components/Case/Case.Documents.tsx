@@ -47,7 +47,7 @@ export const Documents: FunctionComponent<IDocumentsProps> = ({
     shouldDownload,
     fileToDownloadBase64,
   } = useDocuments(documents);
-
+  console.log('I am here docs')
   return (
     <ImageViewer selectedImage={selectedImage} onSelectImage={onSelectImage}>
       <div className={`flex min-h-[600px] w-full flex-col items-center`}>

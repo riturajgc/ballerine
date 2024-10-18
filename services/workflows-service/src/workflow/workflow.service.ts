@@ -310,6 +310,7 @@ export class WorkflowService {
       ...workflow,
       context: {
         ...workflow.context,
+        nfcAvailable: true,
         documents: workflow.context?.documents?.map(
           (document: DefaultContextSchema['documents'][number]) => {
             return addPropertiesSchemaToDocument(
@@ -781,6 +782,7 @@ export class WorkflowService {
         {
           context: {
             ...runtimeData.context,
+            nfcAvailable: true,
             documents: documentsWithDecision,
           },
         },
@@ -1074,6 +1076,7 @@ export class WorkflowService {
       case 'base':
         return {
           ...context,
+          nfcAvailable: true,
           documents: [updatePayload],
         };
 
@@ -1169,6 +1172,7 @@ export class WorkflowService {
 
         this.__validateWorkflowDefinitionContext(workflowDef, {
           ...data.context,
+          nfcAvailable: true,
           documents: data.context?.documents?.map(
             (document: DefaultContextSchema['documents'][number]) => ({
               ...document,
@@ -1385,6 +1389,7 @@ export class WorkflowService {
     });
 
     return await beginTransactionIfNotExist(async transaction => {
+      let workflowToken = '';
       const workflowDefinition = await this.workflowDefinitionRepository.findById(
         workflowDefinitionId,
         {},
@@ -1414,6 +1419,7 @@ export class WorkflowService {
         currentProjectId,
       );
       const entityType = context.entity.type === 'business' ? 'business' : 'endUser';
+      console.log('entityId: ', entityId, ' entityType: ', entityType)
       const existingWorkflowRuntimeData =
         await this.workflowRuntimeDataRepository.findActiveWorkflowByEntityAndLock(
           {
@@ -1424,7 +1430,7 @@ export class WorkflowService {
           projectIds,
           transaction,
         );
-
+      console.log('existingWorkflowRuntimeData: ', existingWorkflowRuntimeData)
       let contextToInsert = structuredClone(context);
 
       // @ts-ignore
@@ -1454,6 +1460,7 @@ export class WorkflowService {
       ) {
         const contextWithoutDocumentPageType = {
           ...contextToInsert,
+          nfcAvailable: true,
           documents: this.omitTypeFromDocumentsPages(contextToInsert.documents),
         };
 
@@ -1509,6 +1516,7 @@ export class WorkflowService {
               workflowDefinitionVersion: workflowDefinition.version,
               context: {
                 ...contextToInsert,
+                nfcAvailable: true,
                 documents: documentsWithPersistedImages,
                 flowConfig: (contextToInsert as any)?.flowConfig ?? createFlowConfig(uiSchema),
                 metadata: {
@@ -1543,8 +1551,8 @@ export class WorkflowService {
         });
 
         let endUserId: string;
-
-        if (mergedConfig.createCollectionFlowToken) {
+        console.log('mergedConfig: ', mergedConfig)
+        if (true) { //temp
           if (entityType === 'endUser') {
             endUserId = entityId;
             entities.push({ type: 'individual', id: entityId });
@@ -1568,7 +1576,7 @@ export class WorkflowService {
           }
 
           const nowPlus30Days = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-          const workflowToken = await this.workflowTokenService.create(
+          workflowToken = (await this.workflowTokenService.create(
             currentProjectId,
             {
               workflowRuntimeDataId: workflowRuntimeData.id,
@@ -1576,7 +1584,7 @@ export class WorkflowService {
               expiresAt: nowPlus30Days,
             },
             transaction,
-          );
+          )).token;
 
           workflowRuntimeData = await this.workflowRuntimeDataRepository.updateStateById(
             workflowRuntimeData.id,
@@ -1586,7 +1594,7 @@ export class WorkflowService {
                   ...workflowRuntimeData.context,
                   metadata: {
                     ...(workflowRuntimeData.context.metadata ?? {}),
-                    token: workflowToken.token,
+                    token: workflowToken,
                     collectionFlowUrl: env.COLLECTION_FLOW_URL,
                     webUiSDKUrl: env.WEB_UI_SDK_URL,
                   },
@@ -1628,7 +1636,8 @@ export class WorkflowService {
         this.logger.log('documents', contextToInsert.documents);
 
         contextToInsert.documents = assignIdToDocuments(contextToInsert.documents);
-
+        const documentsToInsert = this.updateOrInsertDocuments(existingWorkflowRuntimeData.context.documents, contextToInsert.documents);
+        contextToInsert.documents = documentsToInsert;
         const documentsWithPersistedImages = await this.copyDocumentsPagesFilesAndCreate(
           contextToInsert?.documents,
           entityId,
@@ -1640,7 +1649,14 @@ export class WorkflowService {
           ...contextToInsert,
           documents: documentsWithPersistedImages as DefaultContextSchema['documents'],
         };
-
+        const entityDataToInsert = {
+          ...existingWorkflowRuntimeData.context.entity.data,
+          ...contextToInsert.entity.data
+        }
+        console.log('existingWorkflowRuntimeData.context.entity.data: ', existingWorkflowRuntimeData.context.entity.data);
+        console.log('new: ', contextToInsert.entity.data);
+        contextToInsert.entity.data = entityDataToInsert;
+        console.log('add contextToInsert.entity.data: ', contextToInsert.entity.data)
         workflowRuntimeData = await this.workflowRuntimeDataRepository.updateStateById(
           existingWorkflowRuntimeData.id,
           {
@@ -1672,11 +1688,12 @@ export class WorkflowService {
         entityType,
         newWorkflowCreated,
       });
-
+      console.log('I am here, ', workflowToken)
       return [
         {
           workflowDefinition,
           workflowRuntimeData,
+          workflowToken,
           ballerineEntityId: entityId,
           entities,
         },
@@ -1900,6 +1917,7 @@ export class WorkflowService {
     const validate = ajv.compile(workflowDefinition?.contextSchema?.schema); // TODO: fix type
     const isValid = validate({
       ...context,
+      nfcAvailable: true,
       // Validation should not include the documents' 'propertiesSchema' prop.
       documents: context?.documents?.map(
         ({
@@ -2438,6 +2456,24 @@ export class WorkflowService {
     );
 
     return documentsWithPersistedImages;
+  }
+
+  updateOrInsertDocuments(existingDocuments: any[], newDocuments: any[]): any[] {
+    const updatedDocuments = [...existingDocuments]; // Clone existing documents
+  
+    newDocuments.forEach(newDoc => {
+      const index = updatedDocuments.findIndex(doc => doc.type === newDoc.type);
+      
+      if (index !== -1) {
+        // Document with the same type exists, update ballerineFileId
+        updatedDocuments[index] = { ...updatedDocuments[index], pages: newDoc.pages };
+      } else {
+        // Document with the same type does not exist, insert new document
+        updatedDocuments.push(newDoc);
+      }
+    });
+  
+    return updatedDocuments;
   }
 
   async updateSalesforceRecord({

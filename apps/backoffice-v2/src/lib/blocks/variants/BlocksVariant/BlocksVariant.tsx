@@ -24,7 +24,10 @@ export const BlocksVariant: FunctionComponent<{
   const isWebsiteMonitoringVariant = checkIsWebsiteMonitoringVariant(workflowDefinition);
   const isOngoingVariant =
     checkIsOngoingVariant(workflowDefinition) || checkIsAmlVariant(workflowDefinition);
-
+  console.log('isKybExampleVariant: ', isKybExampleVariant)
+  console.log('isManualReviewVariant: ', isManualReviewVariant)
+  console.log('isWebsiteMonitoringVariant: ', isWebsiteMonitoringVariant)
+  console.log('isOngoingVariant: ', isOngoingVariant)
   if (isWebsiteMonitoringVariant) {
     return <WebsiteMonitoringBlocks />;
   }

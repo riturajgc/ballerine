@@ -27,46 +27,46 @@ export const getVariantTabs = (
         displayName: 'Summary',
         disabled: !tabBlocks[Tab.SUMMARY]?.length,
       },
-      {
-        name: Tab.COMPANY_INFORMATION,
-        displayName: 'Company Information',
-        disabled: !tabBlocks[Tab.COMPANY_INFORMATION]?.length,
-      },
-      {
-        name: Tab.STORE_INFO,
-        displayName: 'Store Info',
-        disabled: !tabBlocks[Tab.STORE_INFO]?.length,
-      },
+      // {
+      //   name: Tab.COMPANY_INFORMATION,
+      //   displayName: 'Company Information',
+      //   disabled: !tabBlocks[Tab.COMPANY_INFORMATION]?.length,
+      // },
+      // {
+      //   name: Tab.STORE_INFO,
+      //   displayName: 'Store Info',
+      //   disabled: !tabBlocks[Tab.STORE_INFO]?.length,
+      // },
       {
         name: Tab.DOCUMENTS,
         displayName: 'Documents',
         disabled: !tabBlocks[Tab.DOCUMENTS]?.length,
       },
-      {
-        name: Tab.UBOS,
-        displayName: 'UBOs',
-        disabled: !tabBlocks[Tab.UBOS]?.length,
-      },
-      {
-        name: Tab.ASSOCIATED_COMPANIES,
-        displayName: 'Associated Companies',
-        disabled: !tabBlocks[Tab.ASSOCIATED_COMPANIES]?.length,
-      },
-      {
-        name: Tab.DIRECTORS,
-        displayName: 'Directors',
-        disabled: !tabBlocks[Tab.DIRECTORS]?.length,
-      },
-      {
-        name: Tab.MONITORING_REPORTS,
-        displayName: 'Monitoring Reports',
-        disabled: !tabBlocks[Tab.MONITORING_REPORTS]?.length,
-      },
-      {
-        name: Tab.CUSTOM_DATA,
-        displayName: 'Custom Data',
-        disabled: !tabBlocks[Tab.CUSTOM_DATA]?.length,
-      },
+      // {
+      //   name: Tab.UBOS,
+      //   displayName: 'UBOs',
+      //   disabled: !tabBlocks[Tab.UBOS]?.length,
+      // },
+      // {
+      //   name: Tab.ASSOCIATED_COMPANIES,
+      //   displayName: 'Associated Companies',
+      //   disabled: !tabBlocks[Tab.ASSOCIATED_COMPANIES]?.length,
+      // },
+      // {
+      //   name: Tab.DIRECTORS,
+      //   displayName: 'Directors',
+      //   disabled: !tabBlocks[Tab.DIRECTORS]?.length,
+      // },
+      // {
+      //   name: Tab.MONITORING_REPORTS,
+      //   displayName: 'Monitoring Reports',
+      //   disabled: !tabBlocks[Tab.MONITORING_REPORTS]?.length,
+      // },
+      // {
+      //   name: Tab.CUSTOM_DATA,
+      //   displayName: 'Custom Data',
+      //   disabled: !tabBlocks[Tab.CUSTOM_DATA]?.length,
+      // },
     ];
 
     return applyTabsOverride(baseTabs, theme.tabsOverride);

@@ -78,9 +78,14 @@ postgresql:
 
 ### Installing Ballerine helm chart
 
+helm uninstall ballerine . -n ballerine
+
 ```bash
 helm dep build
-helm install ballerine . -n ballerine --create-namespace -f example.values.yaml
+helm install ballerine . -n ballerine --create-namespace -f values.yaml --dry-run
+
+helm upgrade ballerine ./helm --namespace=ballerine -f values.yaml
+
 ```
 
 ### Troubleshooting

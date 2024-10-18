@@ -1,0 +1,291 @@
+## Postgres params
+postgresql:
+  image:
+    repository: sibedge/postgres-plv8
+    tag: 15.3-3.1.7
+  enabled: true
+  auth:
+    username: admin
+    password: admin
+    postgresPassword: admin
+    database: postgres
+  # Local dev purpose
+  persistence:
+    existingClaim: postgresql-pv-claim
+  volumePermissions:
+    enabled: true
+
+backoffice:
+  enabled: true
+  replicas: 1
+  strategyType: RollingUpdate
+  updateStrategy:
+    maxSurge: 1
+    maxUnavailable: '0'
+  nameOverride: backoffice
+  service:
+    port: 80
+    type: ClusterIP
+    protocol: TCP
+  image:
+    registry: docker.io
+    repository: 'gcsns/gb-backoffice'
+    pullPolicy: Always
+    pullSecrets: "ballerine-docker-config"
+    tag: "0.1.0"
+  applicationConfig:
+    VITE_API_URL: "https://workflowsvc-demo.gamechange.dev/api/v1/internal"
+    VITE_API_KEY: "secret"
+    VITE_AUTH_ENABLED: true
+    VITE_MOCK_SERVER: false
+    VITE_POLLING_INTERVAL: 10
+    VITE_ASSIGNMENT_POLLING_INTERVAL: 5
+    VITE_FETCH_SIGNED_URL: false
+    VITE_ENVIRONMENT_NAME: "development"
+  ingress:
+    enabled: true
+    className: "nginx"
+    pathtype: Prefix
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      #ingress.annotations.service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "<your aws acm arn>"
+      # acme.cert-manager.io/http01-edit-in-place: "true"
+      # cert-manager.io/common-name: backoffice.ballerine.io
+      cert-manager.io/cluster-issuer: http01-cluster-issuer
+      # nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/limit-rps: "15"
+    hosts:
+      - host: case-management-demo.gamechange.dev
+        paths:
+          - path: /
+    tls:
+      - secretName: ballerine-case-management-demo-gamechange-dev-secret
+        hosts:
+          - case-management-demo.gamechange.dev
+
+headlessexample:
+  enabled: false
+  replicas: 1
+  strategyType: RollingUpdate
+  updateStrategy:
+    maxSurge: 1
+    maxUnavailable: '0'
+  nameOverride: headlessexample
+  service:
+    port: 80
+    type: ClusterIP
+    protocol: TCP
+  image:
+    registry: ghcr.io
+    repository: 'ballerine-io/headless-example'
+    pullPolicy: Always
+    pullSecrets: ""
+    tag: "dev"
+  ingress:
+    enabled: false
+    className: "nginx"
+    pathtype: Prefix
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      ingress.annotations.service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "<your aws acm arn>"
+      # acme.cert-manager.io/http01-edit-in-place: "true"
+      # cert-manager.io/cluster-issuer: letsencrypt-staging
+      # cert-manager.io/common-name: headlessexample.ballerine.io
+      # nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/limit-rps: "15"
+    hosts:
+      - host: headlessexample.dev.eu.ballerine.app
+        paths:
+          - path: /
+    tls: {}
+      # - secretName: letsencrypt-staging
+      #   hosts:
+      #     - headlessexample.ballerine.io
+
+kybapp:
+  enabled: false
+  replicas: 1
+  strategyType: RollingUpdate
+  updateStrategy:
+    maxSurge: 1
+    maxUnavailable: "0"
+  nameOverride: kybapp
+  service:
+    port: 80
+    type: ClusterIP
+    protocol: TCP
+  image:
+    registry: ghcr.io
+    repository: "ballerine-io/kyb-app"
+    pullPolicy: Always
+    pullSecrets: ""
+    tag: "dev"
+  ingress:
+    enabled: false
+    className: "nginx"
+    pathtype: Prefix
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      ingress.annotations.service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "<your aws acm arn>"
+      # acme.cert-manager.io/http01-edit-in-place: "true"
+      # cert-manager.io/cluster-issuer: letsencrypt-staging
+      # cert-manager.io/common-name: workflowdashboard.ballerine.io
+      # nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/limit-rps: "15"
+    hosts:
+      - host: kyb.dev.eu.ballerine.app
+        paths:
+          - path: /
+    tls: {}
+      # - secretName: letsencrypt-staging
+      #   hosts:
+      #     - headlessexample.ballerine.io
+
+workflowsdashboard:
+  enabled: true
+  replicas: 1
+  strategyType: RollingUpdate
+  updateStrategy:
+    maxSurge: 1
+    maxUnavailable: '0'
+  nameOverride: workflowsdashboard
+  service:
+    port: 80
+    type: ClusterIP
+    protocol: TCP
+  image:
+    registry: docker.io
+    repository: 'gcsns/gb-workflows-dashboard'
+    pullPolicy: Always
+    pullSecrets: "ballerine-docker-config"
+    tag: "0.0.3"
+  applicationConfig:
+    VITE_API_URL: "https://workflowsvc-demo.gamechange.dev/api/v1/"
+    MODE: "development"
+    VITE_IMAGE_LOGO_URL:
+    VITE_ENVIRONMENT_NAME: "development"
+  ingress:
+    enabled: true
+    className: "nginx"
+    pathtype: Prefix
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      #ingress.annotations.service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "<your aws acm arn>"
+      # acme.cert-manager.io/http01-edit-in-place: "true"
+      cert-manager.io/cluster-issuer: http01-cluster-issuer
+      # cert-manager.io/common-name: workflowdashboard.ballerine.io
+      # nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/limit-rps: "15"
+    hosts:
+      - host: workflowdashboard-demo.gamechange.dev
+        paths:
+          - path: /
+    tls:
+      - secretName: ballerine-workflowdashboard-demo-gamechange-dev-secret
+        hosts:
+          - workflowdashboard-demo.gamechange.dev
+
+websocketService:
+  enabled: false
+  replicas: 1
+  strategyType: RollingUpdate
+  updateStrategy:
+    maxSurge: 1
+    maxUnavailable: '0'
+  nameOverride: websocketservice
+  service:
+    port: 3500
+    type: ClusterIP
+    protocol: TCP
+  image:
+    registry: ghcr.io
+    repository: 'ballerine-io/websocket-service'
+    pullPolicy: Always
+    tag: "dev"
+  ingress:
+    enabled: true
+    className: "nginx"
+    pathtype: Prefix
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      ingress.annotations.service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "<your aws acm arn>"
+      # acme.cert-manager.io/http01-edit-in-place: "true"
+      # cert-manager.io/cluster-issuer: letsencrypt-staging
+      # cert-manager.io/common-name: websocket.ballerine.io
+      # nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/limit-rps: "15"
+    tls : {}
+    hosts:
+      - host: websocket.dev.eu.ballerine.app
+        paths:
+          - path: /
+  applicationConfig:
+    PORT: 3500
+    NODE_ENV: development
+    COMPOSE_PROJECT_NAME: ballerine-x
+
+workflowService:
+  enabled: true
+  replicas: 1
+  strategyType: RollingUpdate
+  updateStrategy:
+    maxSurge: 1
+    maxUnavailable: '0'
+  nameOverride: workflowservice
+  migration: false
+  service:
+    port: 3000
+    type: ClusterIP
+    protocol: TCP
+  image:
+    registry: docker.io
+    repository: 'gcsns/gb-workflows-service'
+    pullPolicy: Always
+    pullSecrets: "ballerine-docker-config"
+    tag: "0.1.0"
+  ingress:
+    enabled: true
+    className: "nginx"
+    pathtype: Prefix
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: http01-cluster-issuer
+      # ingress.annotations.service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "<your aws acm arn>"
+      # acme.cert-manager.io/http01-edit-in-place: "true"
+      # cert-manager.io/cluster-issuer: letsencrypt-staging
+      # cert-manager.io/common-name: workflowsvc.ballerine.io
+      # nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/limit-rps: "15"
+    hosts:
+      - host: workflowsvc-demo.gamechange.dev
+        paths:
+          - path: /
+    tls:
+      - secretName: ballerine-workflowsvc-demo-gamechange-dev-secret
+        hosts:
+          - workflowsvc-demo.gamechange.dev
+  applicationConfig:
+    BCRYPT_SALT: "10"
+    DB_URL: ""
+    DB_USER: ""
+    DB_PASSWORD: ""
+    DB_PORT: ""
+    PORT: "3000"
+    COMPOSE_PROJECT_NAME: "ballerine-x"
+    SESSION_SECRET: "iGdnj4A0YOhj8dHJK7IWSvQKEZsG7P70FFehuddhFPjtg/bSkzFejYILk4Xue6Ilx9y3IAwzR8pV1gb4"
+    SESSION_EXPIRATION_IN_MINUTES: '60'
+    BACKOFFICE_CORS_ORIGIN: "https://case-management-demo.gamechange.dev"
+    HEADLESS_EXAMPLE_CORS_ORIGIN: "http://localhost:5173"
+    API_KEY: "secret"
+    NODE_ENV: "development"
+    SENTRY_DSN: ""
+    WEBHOOK_URL: ""
+    WORKFLOW_DASHBOARD_CORS_ORIGIN: "https://workflowdashboard-demo.gamechange.dev"
+    KYB_EXAMPLE_CORS_ORIGIN: "http://localhost:5201"
+    APP_API_URL: https://alon.ballerine.dev
+    UNIFIED_API_URL: "https://unified-api-test.eu.ballerine.app"
+    UNIFIED_API_TOKEN: ''
+    UNIFIED_API_SHARED_SECRET: ''
+    ENVIRONMENT_NAME: 'development'
+    HASHING_KEY_SECRET_BASE64: "JDJiJDEwJDNFeWtwWEs4QkdiczlRaWFwLkM4Vk8="
+    NOTION_API_KEY: "JDJiJDEwJDNFeWtwWEs4QkdiczlRaWFwLkM4Vk8="

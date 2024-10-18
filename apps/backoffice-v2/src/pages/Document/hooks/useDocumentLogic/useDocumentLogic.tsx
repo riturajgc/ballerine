@@ -100,7 +100,7 @@ export const useDocumentLogic = () => {
   );
 
   const isLoading = isLoadingWorkflow || storageFilesQueryResult.some(file => file.isLoading);
-
+  console.log('title: ', title)
   return {
     isLoading,
     documents: [

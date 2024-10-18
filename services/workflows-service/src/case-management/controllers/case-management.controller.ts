@@ -28,6 +28,7 @@ import { ListIndividualsProfilesSchema } from '@/case-management/dtos/list-indiv
 import { z } from 'zod';
 import { EndUserAmlHitsSchema } from '@/end-user/end-user.schema';
 import { Business, EndUsersOnBusinesses } from '@prisma/client';
+import { readSync } from 'fs';
 
 @Controller('case-management')
 // @ApiExcludeController()
@@ -65,13 +66,18 @@ export class CaseManagementController {
     this.logger.log(
       `User ${authenticatedEntity?.user?.id} created workflow ${(await result).workflowRuntimeId}`,
     );
-
+    console.log('result: ', result);
     return result;
   }
 
   @Get('transactions')
   async getTransactions(@CurrentProject() projectId: TProjectId) {
     return this.transactionService.getAll({}, projectId);
+  }
+
+  @Get('check-session')
+  async checkSession(@CurrentProject() projectId: TProjectId) {
+    return true;
   }
 
   @Get('profiles/individuals')
