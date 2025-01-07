@@ -1,0 +1,58 @@
+version: '3'
+services:
+  server:
+    volumes:
+       - type: bind
+         source: .
+         target: /app/
+       - /app/node_modules
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+      args:
+        NPM_LOG_LEVEL: notice
+    ports:
+      - ${PORT}:3000
+    env_file:
+      - .env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+  migrate:
+    build:
+      context: .
+      args:
+        NPM_LOG_LEVEL: notice
+    command: npm run db:init
+    working_dir: /app/server
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: sibedge/postgres-plv8:15.3-3.1.7
+    ports:
+      - 5432:5432
+    env_file:
+      - .env
+    volumes:
+      - postgres15:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD
+        - pg_isready
+        - -q
+        - -d
+        - ${DB_NAME}
+        - -U
+        - ${DB_USER}
+      timeout: 45s
+      interval: 10s
+      retries: 10
+  adminer:
+    image: adminer
+    ports:
+      - 8080:8080
+volumes:
+  postgres15: ~

@@ -10,3 +10,4 @@ dist
 scripts/seed_*.ts
 vite.config.ts.timestamp-*.mjs
 prisma/data-migrations
+postgres15/
