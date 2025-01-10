@@ -827,32 +827,32 @@ async function seed() {
     },
   });
 
-  await createFilter(
-    'Onboarding - Businesses with enriched data',
-    'businesses',
-    {
-      select: {
-        id: true,
-        status: true,
-        assigneeId: true,
-        createdAt: true,
-        context: true,
-        state: true,
-        tags: true,
-        ...baseFilterDefinitionSelect,
-        ...baseFilterBusinessSelect,
-        ...baseFilterAssigneeSelect,
-      },
-      where: {
-        workflowDefinitionId: { in: ['dynamic_external_request_example'] },
-        businessId: { not: null },
-      },
-    },
-    project1.id,
-  );
+  // await createFilter(
+  //   'Onboarding - Businesses with enriched data',
+  //   'businesses',
+  //   {
+  //     select: {
+  //       id: true,
+  //       status: true,
+  //       assigneeId: true,
+  //       createdAt: true,
+  //       context: true,
+  //       state: true,
+  //       tags: true,
+  //       ...baseFilterDefinitionSelect,
+  //       ...baseFilterBusinessSelect,
+  //       ...baseFilterAssigneeSelect,
+  //     },
+  //     where: {
+  //       workflowDefinitionId: { in: ['dynamic_external_request_example'] },
+  //       businessId: { not: null },
+  //     },
+  //   },
+  //   project1.id,
+  // );
 
   await createFilter(
-    'Onboarding - Individuals',
+    'Onboarding',
     'individuals',
     {
       select: {
@@ -876,7 +876,7 @@ async function seed() {
   );
 
   await createFilter(
-    'KYC - Manual Review',
+    'Transactional',
     'individuals',
     {
       select: {
@@ -900,31 +900,7 @@ async function seed() {
   );
 
   await createFilter(
-    "KYB with GC EFORMs 1",
-    'businesses',
-    {
-      select: {
-        id: true,
-        status: true,
-        assigneeId: true,
-        createdAt: true,
-        context: true,
-        state: true,
-        tags: true,
-        ...baseFilterDefinitionSelect,
-        ...baseFilterBusinessSelect,
-        ...baseFilterAssigneeSelect,
-      },
-      where: {
-        workflowDefinitionId: { in: ['eform-customer-onboarding'] },
-        businessId: { not: null },
-      },
-    },
-    project1.id,
-  );
-
-  await createFilter(
-    'Nboard - Manual Review',
+    'Others',
     'individuals',
     {
       select: {
@@ -940,12 +916,60 @@ async function seed() {
         ...baseFilterAssigneeSelect,
       },
       where: {
-        workflowDefinitionId: { in: [nboardWorkflowDefinitionId] },
+        workflowDefinitionId: { in: [kycWorkflowDefinitionId] },
         endUserId: { not: null },
       },
     },
     project1.id,
   );
+
+  // await createFilter(
+  //   "KYB with GC EFORMs 1",
+  //   'businesses',
+  //   {
+  //     select: {
+  //       id: true,
+  //       status: true,
+  //       assigneeId: true,
+  //       createdAt: true,
+  //       context: true,
+  //       state: true,
+  //       tags: true,
+  //       ...baseFilterDefinitionSelect,
+  //       ...baseFilterBusinessSelect,
+  //       ...baseFilterAssigneeSelect,
+  //     },
+  //     where: {
+  //       workflowDefinitionId: { in: ['eform-customer-onboarding'] },
+  //       businessId: { not: null },
+  //     },
+  //   },
+  //   project1.id,
+  // );
+
+  // await createFilter(
+  //   'Nboard - Manual Review',
+  //   'individuals',
+  //   {
+  //     select: {
+  //       id: true,
+  //       status: true,
+  //       assigneeId: true,
+  //       context: true,
+  //       createdAt: true,
+  //       state: true,
+  //       tags: true,
+  //       ...baseFilterDefinitionSelect,
+  //       ...baseFilterEndUserSelect,
+  //       ...baseFilterAssigneeSelect,
+  //     },
+  //     where: {
+  //       workflowDefinitionId: { in: [nboardWorkflowDefinitionId] },
+  //       endUserId: { not: null },
+  //     },
+  //   },
+  //   project1.id,
+  // );
 
   // KYB Onboarding
   await client.workflowDefinition.create({
@@ -995,78 +1019,78 @@ async function seed() {
     },
   });
 
-  await createFilter(
-    'Risk Score Improvement - Individuals',
-    'individuals',
-    {
-      select: {
-        id: true,
-        status: true,
-        assigneeId: true,
-        createdAt: true,
-        context: true,
-        state: true,
-        tags: true,
-        ...baseFilterDefinitionSelect,
-        ...baseFilterEndUserSelect,
-        ...baseFilterAssigneeSelect,
-      },
-      where: {
-        workflowDefinitionId: { in: [riskScoreMachineKybId] },
-        endUserId: { not: null },
-      },
-    },
-    project1.id,
-  );
+  // await createFilter(
+  //   'Risk Score Improvement - Individuals',
+  //   'individuals',
+  //   {
+  //     select: {
+  //       id: true,
+  //       status: true,
+  //       assigneeId: true,
+  //       createdAt: true,
+  //       context: true,
+  //       state: true,
+  //       tags: true,
+  //       ...baseFilterDefinitionSelect,
+  //       ...baseFilterEndUserSelect,
+  //       ...baseFilterAssigneeSelect,
+  //     },
+  //     where: {
+  //       workflowDefinitionId: { in: [riskScoreMachineKybId] },
+  //       endUserId: { not: null },
+  //     },
+  //   },
+  //   project1.id,
+  // );
 
-  await createFilter(
-    'Risk Score Improvement - Businesses',
-    'businesses',
-    {
-      select: {
-        id: true,
-        status: true,
-        assigneeId: true,
-        createdAt: true,
-        context: true,
-        state: true,
-        tags: true,
-        ...baseFilterDefinitionSelect,
-        ...baseFilterBusinessSelect,
-        ...baseFilterAssigneeSelect,
-      },
-      where: {
-        workflowDefinitionId: { in: [riskScoreMachineKybId] },
-        businessId: { not: null },
-      },
-    },
-    project1.id,
-  );
+  // await createFilter(
+  //   'Risk Score Improvement - Businesses',
+  //   'businesses',
+  //   {
+  //     select: {
+  //       id: true,
+  //       status: true,
+  //       assigneeId: true,
+  //       createdAt: true,
+  //       context: true,
+  //       state: true,
+  //       tags: true,
+  //       ...baseFilterDefinitionSelect,
+  //       ...baseFilterBusinessSelect,
+  //       ...baseFilterAssigneeSelect,
+  //     },
+  //     where: {
+  //       workflowDefinitionId: { in: [riskScoreMachineKybId] },
+  //       businessId: { not: null },
+  //     },
+  //   },
+  //   project1.id,
+  // );
 
-  await createFilter(
-    "KYB with UBO's",
-    'businesses',
-    {
-      select: {
-        id: true,
-        status: true,
-        assigneeId: true,
-        createdAt: true,
-        context: true,
-        state: true,
-        tags: true,
-        ...baseFilterDefinitionSelect,
-        ...baseFilterBusinessSelect,
-        ...baseFilterAssigneeSelect,
-        childWorkflowsRuntimeData: true,
-      },
-      where: {
-        workflowDefinitionId: { in: ['kyb_with_associated_companies_example'] },
-        businessId: { not: null },
-      },
-    },
-    project1.id,
-  );
+  // await createFilter(
+  //   "KYB with UBO's",
+  //   'businesses',
+  //   {
+  //     select: {
+  //       id: true,
+  //       status: true,
+  //       assigneeId: true,
+  //       createdAt: true,
+  //       context: true,
+  //       state: true,
+  //       tags: true,
+  //       ...baseFilterDefinitionSelect,
+  //       ...baseFilterBusinessSelect,
+  //       ...baseFilterAssigneeSelect,
+  //       childWorkflowsRuntimeData: true,
+  //     },
+  //     where: {
+  //       workflowDefinitionId: { in: ['kyb_with_associated_companies_example'] },
+  //       businessId: { not: null },
+  //     },
+  //   },
+  //   project1.id,
+  // );
 
 
 
