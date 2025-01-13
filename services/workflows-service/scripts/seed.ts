@@ -1057,7 +1057,7 @@ async function seed() {
         ...baseFilterAssigneeSelect,
       },
       where: {
-        workflowDefinitionId: { in: [kycManualMachineId] },
+        workflowDefinitionId: { in: [srOnboardingMachineId] },
         endUserId: { not: null },
       },
     },
@@ -1081,7 +1081,7 @@ async function seed() {
         ...baseFilterAssigneeSelect,
       },
       where: {
-        workflowDefinitionId: { in: [kycWorkflowDefinitionId] },
+        workflowDefinitionId: { in: [srTransactionMachineId] },
         endUserId: { not: null },
       },
     },
@@ -1105,7 +1105,7 @@ async function seed() {
         ...baseFilterAssigneeSelect,
       },
       where: {
-        workflowDefinitionId: { in: [kycWorkflowDefinitionId] },
+        workflowDefinitionId: { in: [srOthersMachineId] },
         endUserId: { not: null },
       },
     },
