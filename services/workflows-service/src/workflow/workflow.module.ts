@@ -47,6 +47,7 @@ import { BusinessReportService } from '@/business-report/business-report.service
 import { RuleEngineModule } from '@/rule-engine/rule-engine.module';
 import { SentryService } from '@/sentry/sentry.service';
 import { SecretsManagerModule } from '@/secrets-manager/secrets-manager.module';
+import { WorkflowRunTimeHistoryService } from '@/workflow-run-time-history/workflow-run-time-history.service';
 
 @Module({
   controllers: [WorkflowControllerExternal, WorkflowControllerInternal],
@@ -97,6 +98,7 @@ import { SecretsManagerModule } from '@/secrets-manager/secrets-manager.module';
     UiDefinitionRepository,
     UiDefinitionService,
     SentryService,
+    WorkflowRunTimeHistoryService
   ],
   exports: [
     WorkflowService,

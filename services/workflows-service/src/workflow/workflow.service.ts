@@ -107,6 +107,7 @@ import { addPropertiesSchemaToDocument } from './utils/add-properties-schema-to-
 import { entitiesUpdate } from './utils/entities-update';
 import { WorkflowEventEmitterService } from './workflow-event-emitter.service';
 import { WorkflowRuntimeDataRepository } from './workflow-runtime-data.repository';
+import { WorkflowRunTimeHistoryService } from '@/workflow-run-time-history/workflow-run-time-history.service';
 
 type TEntityId = string;
 
@@ -147,6 +148,7 @@ export class WorkflowService {
     private readonly ruleEngineService: RuleEngineService,
     private readonly sentry: SentryService,
     private readonly secretsManagerFactory: SecretsManagerFactory,
+    private readonly workflowRunTimeHistoryService: WorkflowRunTimeHistoryService,
   ) {}
 
   async createWorkflowDefinition(data: WorkflowDefinitionCreateDto) {
@@ -1544,6 +1546,20 @@ export class WorkflowService {
           transaction,
         );
 
+        // here we can track run time history
+        const historyObject = {
+            workflowRunTimeId: workflowRuntimeData.id,
+            action: 'create',
+            note: `${workflowDefinition.name} ticket created`,
+            metadata: {
+                entityId: entityId,
+                entityType: entityType,
+            }
+        }
+        await this.workflowRunTimeHistoryService.create(
+            historyObject
+        );
+
         logDocumentWithoutId({
           line: 'createOrUpdateWorkflow 1476',
           logger: this.logger,
@@ -1671,6 +1687,21 @@ export class WorkflowService {
             },
           },
           transaction,
+        );
+
+        const historyObject = {
+            workflowRunTimeId: workflowRuntimeData.id,
+            action: 'update',
+            note: `${workflowDefinition.name} ticket Updated`,
+            metadata: {
+                entityId: entityId,
+                entityType: entityType,
+                documents: documentsToInsert,
+                entity: contextToInsert.entity.data
+            }
+        }
+        await this.workflowRunTimeHistoryService.create(
+            historyObject
         );
 
         logDocumentWithoutId({
@@ -2201,6 +2232,21 @@ export class WorkflowService {
         currentProjectId,
         transaction,
       );
+
+      const historyObject = {
+            workflowRunTimeId: updatedRuntimeData.id,
+            action: 'state_change',
+            note: `${workflowDefinition.name} ticket state changed from ${currentState} to ${updatedRuntimeData.state}`,
+            metadata: {
+                entityId: entityId,
+                entityType: entityType,
+                newState: updatedRuntimeData.state,
+                previousState: currentState
+            }
+      }
+        await this.workflowRunTimeHistoryService.create(
+            historyObject
+        );
 
       if (workflowRuntimeData.parentRuntimeDataId) {
         await this.persistChildWorkflowToParent(
