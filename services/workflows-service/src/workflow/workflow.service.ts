@@ -2462,8 +2462,8 @@ export class WorkflowService {
     const updatedDocuments = [...existingDocuments]; // Clone existing documents
   
     newDocuments.forEach(newDoc => {
-      const index = updatedDocuments.findIndex(doc => doc.type === newDoc.type);
-      
+        // if uploaded document with same id or type, should be replaced
+      const index = updatedDocuments.findIndex(doc => (doc.type === newDoc.type || doc.id === newDoc.id));
       if (index !== -1) {
         // Document with the same type exists, update ballerineFileId
         updatedDocuments[index] = { ...updatedDocuments[index], pages: newDoc.pages };

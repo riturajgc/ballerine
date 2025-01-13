@@ -24,5 +24,5 @@ export const getMerchantMonitoringSearchSchema = () =>
         | 'business.country'
       >)
       .catch('createdAt'),
-    selected: BooleanishSchema.optional(),
+    selected: z.array(z.string()).catch([]),
   });

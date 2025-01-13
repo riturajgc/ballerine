@@ -166,6 +166,10 @@ async function seed() {
   const onboardingMachineKybId = 'COLLECT_DOCS_b0002zpeid7bq9bbb';
   const riskScoreMachineKybId = 'risk-score-improvement-dev';
 
+  const srOnboardingMachineId = 'sr-onboarding';
+  const srTransactionMachineId = 'sr-transaction';
+  const srOthersMachineId = 'sr-others';
+
   // KYB Flows
   const onboardingMachineId = 'kyb-onboarding';
   const riskScoreMachineId = 'kyb-risk-score';
@@ -486,8 +490,195 @@ async function seed() {
       projectId: project1.id,
     },
   });
+
+  await client.workflowDefinition.create({
+    data: {
+      id: srOnboardingMachineId,
+      name: 'sr-onboarding',
+      version: 1,
+      definitionType: 'statechart-json',
+      config: {},
+      contextSchema: {
+        type: 'json-schema',
+        schema: defaultContextSchema,
+      },
+      definition: {
+        id: 'onboarding',
+        states: {
+          initial: 'sign_up',
+          sign_up: {
+            on: {
+              success: 'id_verification',
+            },
+          },
+          id_verification: {
+            initial: 'id_front_ocr_verification',
+            states: {
+              id_front_ocr_verification: {
+                on: {
+                  success: 'id_back_ocr_verification',
+                  failure: 'id_front_ocr_verification_failed',
+                },
+              },
+              id_front_ocr_verification_failed: {
+                on: {
+                  manual_approval: 'id_back_ocr_verification',
+                },
+              },
+              id_back_ocr_verification: {
+                on: {
+                  success: 'id_front_verification',
+                  failure: 'id_back_ocr_verification_failed',
+                },
+              },
+              id_back_ocr_verification_failed: {
+                on: {
+                  manual_approval: 'id_front_verification',
+                },
+              },
+              id_front_verification: {
+                on: {
+                  success: 'id_back_verification',
+                  failure: 'id_front_verification_failed',
+                },
+              },
+              id_front_verification_failed: {
+                on: {
+                  manual_approval: 'id_back_verification',
+                },
+              },
+              id_back_verification: {
+                on: {
+                  success: 'face_verification',
+                  failure: 'id_back_verification_failed',
+                },
+              },
+              id_back_verification_failed: {
+                on: {
+                  manual_approval: 'face_verification',
+                },
+              },
+            },
+            on: {
+              success: 'face_verification',
+            },
+          },
+          face_verification: {
+            on: {
+              success: 'onboarded',
+              failure: 'face_verification_failed',
+            },
+          },
+          face_verification_failed: {
+            on: {
+              manual_approval: 'onboarded',
+            },
+          },
+          onboarded: {
+            type: 'final',
+          },
+        },
+      },
+      projectId: project1.id,
+    },
+  });
+
+  await client.workflowDefinition.create({
+    data: {
+      id: srTransactionMachineId,
+      name: 'sr-transaction',
+      version: 1,
+      definitionType: 'statechart-json',
+      config: {},
+      contextSchema: {
+        type: 'json-schema',
+        schema: defaultContextSchema,
+      },
+      definition: {
+        id: 'transaction',
+        states: {
+          initiate_transaction: {
+            on: {
+              success: 'linked_bank_account',
+              failure: 'initiate_transaction_failed',
+            },
+          },
+          initiate_transaction_failed: {
+            on: {
+              manual_review: 'linked_bank_account',
+            },
+          },
+          link_bank_account: {
+            on: {
+              success: 'beneficiary_account_added',
+              failure: 'link_bank_acco_failed',
+            },
+          },
+          link_bank_account_failed: {
+            on: {
+              manual_review: 'add_beneficiary_account',
+            },
+          },
+          add_beneficiary_account: {
+            on: {
+              manual_review: 'pending_from_bank',
+            },
+          },
+          pending_from_bank: {
+            on: {
+              success: 'done',
+              failure: 'declined_by_bank',
+            },
+          },
+          done: {
+            type: 'final',
+          },
+          declined_by_bank: {
+            type: 'final',
+          },
+        },
+        initial: 'initiate_transaction',
+      },
+      projectId: project1.id,
+    },
+  });
+
+  await client.workflowDefinition.create({
+    data: {
+      id: srOthersMachineId,
+      name: 'sr-others',
+      version: 1,
+      definitionType: 'statechart-json',
+      config: {},
+      contextSchema: {
+        type: 'json-schema',
+        schema: defaultContextSchema,
+      },
+      definition: {
+        id: 'others',
+        states: {
+          open: {
+            on: {
+              next: 'pending',
+            },
+          },
+          pending: {
+            on: {
+              next: 'closed',
+            },
+          },
+          closed: {
+            type: 'final',
+          },
+        },
+        initial: 'open',
+      },
+      projectId: project1.id,
+    },
+  });
+
   const getDocumentsSchema = () =>
-    ['id_card', 'passport', 'drivers_license', 'voter_id','eida','trade_license'].map(name => ({
+    ['id_card', 'passport', 'drivers_license', 'voter_id', 'eida', 'trade_license'].map(name => ({
       category: name,
       type: name,
       issuer: { country: 'ZZ' },
@@ -649,8 +840,6 @@ async function seed() {
       projectId: project1.id,
     },
   });
-
-
 
   await client.workflowDefinition.create({
     data: {
@@ -1092,8 +1281,6 @@ async function seed() {
   //   project1.id,
   // );
 
-
-
   await client.$transaction(async tx => {
     businessRiskIds.map(async (id, index) => {
       const riskWf = async () => ({
@@ -1244,7 +1431,7 @@ async function createUsers({ project1, project2 }: any, client: PrismaClient) {
       firstName: faker.name.firstName(),
       lastName: faker.name.lastName(),
       password: await hash('agent3', BCRYPT_SALT),
-      roles: ['user', 'customer','admin'],
+      roles: ['user', 'customer', 'admin'],
       avatarUrl: null,
       userToProjects: {
         create: { projectId: project1.id },
