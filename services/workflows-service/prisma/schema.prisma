@@ -254,6 +254,15 @@ model WorkflowRuntimeData {
   @@index([tags(ops: JsonbPathOps)], type: Gin)
 }
 
+model WorkflowRunTimeHistory {
+  id          String   @id @default(cuid()) // Unique identifier
+  workflowRunTimeId  String   // ID of the workflow
+  action      String   // The action performed - statechange, created, updated
+  timestamp   DateTime @default(now()) // When the action occurred
+  metadata    Json?    // Optional additional data, like previousState, nextState
+  note        String   // Note to be displayed that describes what the history is
+}
+
 model File {
   id               String   @id @default(cuid())
   mimeType         String?
