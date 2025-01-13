@@ -128,4 +128,11 @@ export class EndUserModel {
   })
   @Type(() => Date)
   updatedAt?: Date;
+
+  @ApiProperty({
+    required: false,
+    type: String,
+  })
+  @Type(() => String)
+  externalReferenceId?: string;
 }
