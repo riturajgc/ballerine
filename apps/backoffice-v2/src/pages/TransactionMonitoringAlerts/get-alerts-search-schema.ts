@@ -23,7 +23,7 @@ export const getAlertsSearchSchema = (authenticatedUserId: string | undefined) =
         state: [],
         correlationIds: [],
       }),
-    selected: BooleanishSchema.optional(),
+    selected: z.array(z.string().nullable()).catch([]),
     businessId: z.string().optional(),
     counterpartyId: z.string().optional(),
   });

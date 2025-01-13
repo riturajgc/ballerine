@@ -41,6 +41,10 @@ export class UserService {
     return this.repository.updateByIdUnscoped(id, args);
   }
 
+  async upsertByEmail(email: string, args: Parameters<UserRepository['upsertByEmailUnscoped']>[1]) {
+    return this.repository.upsertByEmailUnscoped(email, args);
+  }
+
   async deleteById(
     id: string,
     args: Parameters<UserRepository['deleteById']>[1],

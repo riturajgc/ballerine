@@ -106,6 +106,34 @@ export class UserRepository {
     });
   }
 
+
+  async upsertByEmailUnscoped<T extends Omit<Prisma.UserUpsertArgs, 'where'>>(
+    email: string,
+    args: Prisma.SelectSubset<T, Omit<Prisma.UserUpsertArgs, 'where'>>,
+  ): Promise<User> {
+    return this.prisma.user.upsert({
+      where: { email },
+      create: {
+        ...args.create,
+        email, // Ensure email is included in the creation data
+        password: args.create?.password
+          ? await transformStringFieldUpdateInput(args.create.password, password =>
+              this.passwordService.hash(password),
+            )
+          : undefined,
+      },
+      update: {
+        ...args.update,
+        password: args.update?.password
+          ? await transformStringFieldUpdateInput(args.update.password, password =>
+              this.passwordService.hash(password),
+            )
+          : undefined,
+      },
+    } as Prisma.UserUpsertArgs); // Cast to Prisma.UserUpsertArgs to satisfy the type checker
+  }
+  
+
   async deleteById<T extends Omit<Prisma.UserDeleteArgs, 'where'>>(
     id: string,
     args: Prisma.SelectSubset<T, Omit<Prisma.UserDeleteArgs, 'where'>>,
