@@ -21,6 +21,7 @@ model User {
   phone     String?    @unique
   password  String
   avatarUrl String?
+  serialNumber Int?
   roles     Json
   status    UserStatus @default(Active)
 
@@ -902,3 +903,26 @@ model BusinessReport {
   @@index([riskScore])
   @@index([type])
 }
+
+model RoundRobin {
+  id           String         @id @default(cuid()) // Unique identifier for the round-robin entry
+  type         RoundRobinType @unique // Make the type field unique
+  userId       String         // Unique identifier for the user
+  serialNumber Int            // Serial number for the round-robin entry
+  userList     UserDetails[]  // List of user details associated with the round-robin
+  total        Int            // Total number of entries in the round-robin
+}
+
+model UserDetails {
+  id           String   @id @default(cuid()) // Unique identifier for each user detail entry
+  userId       String   // Unique identifier of the user
+  serialNumber Int      // Serial number assigned to the user
+  roundRobinId String   // Foreign key to RoundRobin
+  roundRobin   RoundRobin @relation(fields: [roundRobinId], references: [id]) // Relation to RoundRobin
+}
+
+enum RoundRobinType {
+  lead
+  ticket
+}
+

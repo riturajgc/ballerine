@@ -18,6 +18,10 @@ export class UserService {
     return this.repository.findMany(args, projectIds);
   }
 
+  async listAll(args: Parameters<UserRepository['findMany']>[0]) {
+    return this.repository.list(args);
+  }
+
   async getById(
     id: string,
     args: Parameters<UserRepository['findById']>[1],

@@ -148,4 +148,17 @@ export class UserRepository {
       ...args,
     });
   }
+
+  async list<T extends Prisma.UserFindManyArgs>(
+    args: Prisma.SelectSubset<T, Prisma.UserFindManyArgs>
+  ): Promise<User[]> {
+    const scopedArgs = {
+      ...args,
+      where: {
+        ...args?.where,
+      },
+    };
+
+    return this.prisma.user.findMany(scopedArgs);
+  }
 }

@@ -59,4 +59,7 @@ export class UserModel {
   @IsDate()
   @IsOptional()
   lastActiveAt!: Date | null;
+
+  @ApiProperty({ description: 'The serial number of the user.', required: false })
+  serialNumber!: number | null;
 }
