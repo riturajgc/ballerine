@@ -1,14 +1,13 @@
 import { CaseCreation } from '@/pages/Entities/components/CaseCreation';
 import { ctw } from '@ballerine/ui';
 import { FunctionComponent } from 'react';
-import { Outlet } from 'react-router-dom';
 import { TAssignee } from '../../common/components/atoms/AssignDropdown/AssignDropdown';
 import { MotionScrollArea } from '../../common/components/molecules/MotionScrollArea/MotionScrollArea';
 import { Pagination } from '../../common/components/organisms/Pagination/Pagination';
-import { Case } from '../Entity/components/Case/Case';
 import { Cases } from './components/Cases/Cases';
 import { useEntities } from './hooks/useEntities/useEntities';
 import { NoCases } from '@/pages/Entities/components/NoCases/NoCases';
+import { Loader } from 'lucide-react';
 
 export const Entities: FunctionComponent = () => {
   const {
@@ -28,7 +27,7 @@ export const Entities: FunctionComponent = () => {
   } = useEntities();
 
   return (
-    <>
+    <div className="h-full w-full">
       <Cases
         onSearch={onSearch}
         onFilter={onFilter}
@@ -77,21 +76,11 @@ export const Entities: FunctionComponent = () => {
       </Cases>
       {/* Display skeleton individual when loading the entities list */}
       {isLoading && (
-        <Case>
-          {/* Reject and approve header */}
-          <Case.Actions id={''} fullName={''} avatarUrl={''} />
-
-          <Case.Content>
-            <div>Hello ino</div>
-            <div>
-              <Case.FaceMatch faceAUrl={''} faceBUrl={''} isLoading />
-              <Case.Info info={{}} isLoading whitelist={[]} />
-            </div>
-            <Case.Documents documents={[]} isLoading />
-          </Case.Content>
-        </Case>
+        <div className="mt-4">
+          <Loader className="animate-pulse" />
+        </div>
       )}
-      {Array.isArray(cases) && !cases.length && !isLoading ? <NoCases /> : <Outlet />}
-    </>
+      {Array.isArray(cases) && !cases.length && !isLoading ? <NoCases /> : null}
+    </div>
   );
 };

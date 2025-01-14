@@ -4,7 +4,6 @@ import { useEntityType } from '../../../../common/hooks/useEntityType/useEntityT
 import { useSearch } from '../../../../common/hooks/useSearch/useSearch';
 import { useSearchParamsByEntity } from '../../../../common/hooks/useSearchParamsByEntity/useSearchParamsByEntity';
 import { createArrayOfNumbers } from '../../../../common/utils/create-array-of-numbers/create-array-of-numbers';
-import { useSelectEntityOnMount } from '../../../../domains/entities/hooks/useSelectEntityOnMount/useSelectEntityOnMount';
 import { useWorkflowsQuery } from '../../../../domains/workflows/hooks/queries/useWorkflowsQuery/useWorkflowsQuery';
 
 export const useEntities = () => {
@@ -82,7 +81,7 @@ export const useEntities = () => {
   );
   const skeletonEntities = createArrayOfNumbers(3);
 
-  useSelectEntityOnMount();
+  // useSelectEntityOnMount();
 
   const { workflowDefinition } = useCaseCreationWorkflowDefinition();
 
