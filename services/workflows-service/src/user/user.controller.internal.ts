@@ -44,7 +44,7 @@ export class UserControllerInternal {
 
   @common.Post()
   @swagger.ApiCreatedResponse({ type: [UserModel] })
-  @UseGuards(AdminAuthGuard)
+  // @UseGuards(AdminAuthGuard)
   @swagger.ApiForbiddenResponse()
   async create(
     @common.Body() userCreatInfo: UserCreateDto,
