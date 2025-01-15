@@ -2,18 +2,19 @@ import { TWorkflowById } from '@/domains/workflows/fetchers';
 import { BlocksVariant } from '@/lib/blocks/variants/BlocksVariant/BlocksVariant';
 import { useEntityLogic } from '@/pages/Entity/hooks/useEntityLogic/useEntityLogic';
 import { Case } from './components/Case/Case';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useSelectEntityOnMount } from '@/domains/entities/hooks/useSelectEntityOnMount/useSelectEntityOnMount';
 
 export const Entity = () => {
   const { workflow, selectedEntity } = useEntityLogic();
   const navigate = useNavigate();
   const { locale } = useParams();
+  const { search } = useLocation();
 
   useSelectEntityOnMount();
 
   const handleBack = () => {
-    navigate(`/${locale}/case-management/entities`);
+    navigate(`/${locale}/case-management/entities${search}`);
   };
 
   return (
