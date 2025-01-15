@@ -7,6 +7,7 @@ import { useSelectEntityOnMount } from '@/domains/entities/hooks/useSelectEntity
 import { Button } from '@ballerine/ui';
 import { ArrowLeft } from 'lucide-react';
 import { useEffect } from 'react';
+import EditableCase from './components/EditableCase/EditableCase';
 
 export const Entity = () => {
   const { workflow, selectedEntity } = useEntityLogic();
@@ -21,7 +22,7 @@ export const Entity = () => {
   };
 
   useEffect(() => {
-    console.log('workflow: ', workflow);
+    console.log('workflow?.context?.entity?.data: ', workflow?.context?.entity?.data);
   }, [workflow]);
 
   return (
@@ -45,7 +46,9 @@ export const Entity = () => {
           }
           workflow={workflow as TWorkflowById}
         />
-        <Case.Content key={selectedEntity?.id}>
+        <EditableCase workflow={workflow} />
+
+        {/* <Case.Content key={selectedEntity?.id}>
           {workflow?.workflowDefinition && (
             <BlocksVariant
               workflowDefinition={{
@@ -56,7 +59,7 @@ export const Entity = () => {
               }}
             />
           )}
-        </Case.Content>
+        </Case.Content> */}
       </Case>
     </div>
   );
