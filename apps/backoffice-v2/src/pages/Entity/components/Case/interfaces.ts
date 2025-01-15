@@ -57,3 +57,11 @@ export interface IFaceMatchProps extends ComponentProps<'div'> {
   faceBUrl: string;
   isLoading?: boolean;
 }
+
+export interface ICustomerCreateTicket {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+}

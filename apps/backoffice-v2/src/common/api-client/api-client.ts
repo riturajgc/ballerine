@@ -10,12 +10,15 @@ import { handlePromise } from '../utils/handle-promise/handle-promise';
  * @param method - Expects {@link Method} for the HTTP method.
  * @param options - Options to pass into {@link fetcher}.
  * @param schema - A zod schema to validate the response against.
+ * @param useCommonEndPoint - Determines whether to use the common base URL or the default base URL.
  * @param rest - Allows overriding any of the defaults set by the API client.
  */
-export const apiClient: IApiClient = async ({ endpoint, method, options, schema, ...rest }) =>
+export const apiClient: IApiClient = async ({ endpoint, method, options, schema, useCommonEndPoint, ...rest }) =>
   handlePromise(
     fetcher({
-      url: `${env.VITE_API_URL}/${endpoint}`,
+      url: useCommonEndPoint
+        ? `${env.VITE_API_URL_COMMON}/${endpoint}`
+        : `${env.VITE_API_URL}/${endpoint}`,
       method,
       options: {
         ...options,
