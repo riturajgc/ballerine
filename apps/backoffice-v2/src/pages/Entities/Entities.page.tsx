@@ -1,6 +1,6 @@
 import { CaseCreation } from '@/pages/Entities/components/CaseCreation';
 import { ctw } from '@ballerine/ui';
-import { FunctionComponent } from 'react';
+import { FunctionComponent, useEffect } from 'react';
 import { TAssignee } from '@/common/components/atoms/AssignDropdown/AssignDropdown';
 import { MotionScrollArea } from '@/common/components/molecules/MotionScrollArea/MotionScrollArea';
 import { Pagination } from '@/common/components/organisms/Pagination/Pagination';
@@ -26,6 +26,10 @@ export const Entities: FunctionComponent = () => {
     skeletonEntities,
     isManualCaseCreationEnabled,
   } = useEntities();
+
+  useEffect(() => {
+    console.log('cases: ', cases);
+  }, [cases]);
 
   return (
     <div className="h-full w-full">
@@ -65,6 +69,7 @@ export const Entities: FunctionComponent = () => {
                     }
                     tags={case_.tags}
                     entityAvatarUrl={case_.entity?.avatarUrl}
+                    status={case_.status}
                   />
                 ))}
           </TableComponents.List>

@@ -4,6 +4,9 @@ import { useEntityLogic } from '@/pages/Entity/hooks/useEntityLogic/useEntityLog
 import { Case } from './components/Case/Case';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useSelectEntityOnMount } from '@/domains/entities/hooks/useSelectEntityOnMount/useSelectEntityOnMount';
+import { Button } from '@ballerine/ui';
+import { ArrowLeft } from 'lucide-react';
+import { useEffect } from 'react';
 
 export const Entity = () => {
   const { workflow, selectedEntity } = useEntityLogic();
@@ -17,14 +20,19 @@ export const Entity = () => {
     navigate(`/${locale}/case-management/entities${search}`);
   };
 
+  useEffect(() => {
+    console.log('workflow: ', workflow);
+  }, [workflow]);
+
   return (
     <div className="h-full w-full p-4">
-      <button
+      <Button
+        variant="outline"
         onClick={handleBack}
-        className="mb-4 flex items-center gap-2 text-blue-500 hover:underline"
+        className="ml-4 flex items-center gap-2 text-blue-500"
       >
-        &larr; Back to Entities
-      </button>
+        <ArrowLeft className="h-3 w-3" /> Back to Entities
+      </Button>
       <Case key={workflow?.id}>
         {/* Reject and approve header */}
         <Case.Actions

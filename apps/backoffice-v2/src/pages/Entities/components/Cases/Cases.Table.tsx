@@ -1,6 +1,6 @@
 import React from 'react';
 import dayjs from 'dayjs';
-import { Avatar, UserAvatar } from '@/common/components/atoms/Avatar';
+import { Avatar } from '@/common/components/atoms/Avatar';
 import { StateTag, valueOrNA } from '@ballerine/common';
 import { stringToRGB } from '@/common/utils/string-to-rgb/string-to-rgb';
 import { createInitials } from '@/common/utils/create-initials/create-initials';
@@ -9,7 +9,9 @@ import { Badge, ctw } from '@ballerine/ui';
 import { tagToBadgeData } from '@/pages/Entity/components/Case/consts';
 
 type Assignee = {
-  fullName: string;
+  id: string;
+  firstName: string;
+  lastName: string;
   avatarUrl: string;
 };
 
@@ -19,7 +21,9 @@ type TableItemProps = {
   createdAt: string | Date;
   assignee?: Assignee;
   tags?: string[];
+  state?: string[];
   entityAvatarUrl?: string;
+  status: string;
 };
 
 type TableListProps = {
@@ -36,7 +40,8 @@ const TableList: React.FC<TableListProps> = ({ children }) => {
             <th className="p-4 text-left text-sm font-semibold">User</th>
             <th className="p-4 text-left text-sm font-semibold">Created At</th>
             <th className="p-4 text-left text-sm font-semibold">Assignee</th>
-            <th className="p-4 text-left text-sm font-semibold">Tags</th>
+            <th className="p-4 text-left text-sm font-semibold">Status</th>
+            <th className="p-4 text-left text-sm font-semibold">State</th>
           </tr>
         </thead>
         <tbody>{children}</tbody>
@@ -51,7 +56,9 @@ const TableItem: React.FC<TableItemProps> = ({
   createdAt,
   assignee,
   tags,
+  state,
   entityAvatarUrl,
+  status,
 }) => {
   const entityInitials = createInitials(fullName);
   const rgb = stringToRGB(fullName);
@@ -70,7 +77,6 @@ const TableItem: React.FC<TableItemProps> = ({
     >
       <td className="p-4">
         <div className="flex items-center gap-2">
-          <div className="h-2 w-2 animate-pulse rounded-full bg-gray-200"></div>
           <Avatar
             src={entityAvatarUrl}
             className="h-8 w-8 text-sm"
@@ -87,14 +93,22 @@ const TableItem: React.FC<TableItemProps> = ({
         <div className="font-medium">{valueOrNA(fullName)}</div>
       </td>
       <td className="p-4 text-sm text-muted-foreground">
-        {dayjs(new Date(createdAt)).format('D MMM YYYY HH:mm')}
+        {dayjs(new Date(createdAt)).format('hh:mm A')}
+        {', '}
+        {dayjs(new Date(createdAt)).format('D MMM YYYY')}
       </td>
+      <td className="p-4">{assignee ? `${assignee?.firstName} ${assignee?.lastName}` : ''}</td>
       <td className="p-4">
-        {assignee && <UserAvatar fullName={assignee.fullName} avatarUrl={assignee.avatarUrl} />}
+        <Badge
+          variant={status === 'active' ? 'success' : status === 'inactive' ? 'ghost' : 'ghost'}
+          size="sm"
+        >
+          {`${status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()}`}
+        </Badge>
       </td>
       <td className="p-4">
         <div className="flex gap-2">
-          {tags?.map(tag => (
+          {state?.map(tag => (
             <Badge
               key={tag}
               variant={tagToBadgeData[tag]?.variant}
@@ -105,8 +119,12 @@ const TableItem: React.FC<TableItemProps> = ({
                   StateTag.DATA_ENRICHMENT,
                 ].includes(tag),
               })}
+              size="sm"
             >
-              {tag}
+              {tag
+                .split('_')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(' ')}
             </Badge>
           ))}
         </div>
