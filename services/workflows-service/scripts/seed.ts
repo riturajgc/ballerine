@@ -505,79 +505,83 @@ async function seed() {
       definition: {
         id: 'onboarding',
         states: {
-          initial: 'sign_up',
           sign_up: {
+            tags: ["sign_up"],
             on: {
-              success: 'id_verification',
-            },
-          },
-          id_verification: {
-            initial: 'id_front_ocr_verification',
-            states: {
-              id_front_ocr_verification: {
-                on: {
-                  success: 'id_back_ocr_verification',
-                  failure: 'id_front_ocr_verification_failed',
-                },
-              },
-              id_front_ocr_verification_failed: {
-                on: {
-                  manual_approval: 'id_back_ocr_verification',
-                },
-              },
-              id_back_ocr_verification: {
-                on: {
-                  success: 'id_front_verification',
-                  failure: 'id_back_ocr_verification_failed',
-                },
-              },
-              id_back_ocr_verification_failed: {
-                on: {
-                  manual_approval: 'id_front_verification',
-                },
-              },
-              id_front_verification: {
-                on: {
-                  success: 'id_back_verification',
-                  failure: 'id_front_verification_failed',
-                },
-              },
-              id_front_verification_failed: {
-                on: {
-                  manual_approval: 'id_back_verification',
-                },
-              },
-              id_back_verification: {
-                on: {
-                  success: 'face_verification',
-                  failure: 'id_back_verification_failed',
-                },
-              },
-              id_back_verification_failed: {
-                on: {
-                  manual_approval: 'face_verification',
-                },
-              },
-            },
-            on: {
-              success: 'face_verification',
-            },
-          },
-          face_verification: {
-            on: {
-              success: 'onboarded',
-              failure: 'face_verification_failed',
-            },
-          },
-          face_verification_failed: {
-            on: {
-              manual_approval: 'onboarded',
+              success: 'id_front_ocr_verification',
             },
           },
           onboarded: {
             type: 'final',
+            tags: ["onboarded"]
+          },
+          id_back_verification: {
+            tags: ["id_back_verification"],
+            on: {
+              failure: 'id_back_verification_failed',
+              success: 'face_verification',
+            },
+          },
+          id_front_verification: {
+            tags: ["id_front_verification"],
+            on: {
+              failure: 'id_front_verification_failed',
+              success: 'id_back_verification',
+            },
+          },
+          id_back_ocr_verification: {
+            tags: ["id_back_ocr_verification"],
+            on: {
+              failure: 'id_back_ocr_verification_failed',
+              success: 'id_front_verification',
+            },
+          },
+          id_front_ocr_verification: {
+            tags: ["id_front_ocr_verification"],
+            on: {
+              failure: 'id_front_ocr_verification_failed',
+              success: 'id_back_ocr_verification',
+            },
+          },
+          id_back_verification_failed: {
+            tags: ["id_back_verification_failed"],
+            on: {
+              manual_approval: 'face_verification',
+            },
+          },
+          id_front_verification_failed: {
+            tags: ["id_front_verification_failed"],
+            on: {
+              manual_approval: 'id_back_verification',
+            },
+          },
+          id_back_ocr_verification_failed: {
+            tags: ["id_back_ocr_verification_failed"],
+            on: {
+              manual_approval: 'id_front_verification',
+            },
+          },
+          id_front_ocr_verification_failed: {
+            tags: ["id_front_ocr_verification_failed"],
+            on: {
+              manual_approval: 'id_back_ocr_verification',
+            },
+          },
+          face_verification: {
+            tags: ["face_verification"],
+            on: {
+              failure: 'face_verification_failed',
+              success: 'onboarded',
+            },
+          },
+          face_verification_failed: {
+            tags: ["face_verification_failed"],
+            on: {
+              manual_approval: 'onboarded',
+            },
           },
         },
+        initial: 'sign_up',
       },
       projectId: project1.id,
     },
@@ -1057,7 +1061,7 @@ async function seed() {
         ...baseFilterAssigneeSelect,
       },
       where: {
-        workflowDefinitionId: { in: [kycManualMachineId] },
+        workflowDefinitionId: { in: [srOnboardingMachineId] },
         endUserId: { not: null },
       },
     },
@@ -1081,7 +1085,7 @@ async function seed() {
         ...baseFilterAssigneeSelect,
       },
       where: {
-        workflowDefinitionId: { in: [kycWorkflowDefinitionId] },
+        workflowDefinitionId: { in: [srTransactionMachineId] },
         endUserId: { not: null },
       },
     },
@@ -1105,7 +1109,7 @@ async function seed() {
         ...baseFilterAssigneeSelect,
       },
       where: {
-        workflowDefinitionId: { in: [kycWorkflowDefinitionId] },
+        workflowDefinitionId: { in: [srOthersMachineId] },
         endUserId: { not: null },
       },
     },
