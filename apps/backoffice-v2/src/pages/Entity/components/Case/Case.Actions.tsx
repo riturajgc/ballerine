@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { StateTag } from '@ballerine/common';
+import { Button } from '@/common/components/atoms/Button/Button';
 import { Badge } from '@ballerine/ui';
 import { FunctionComponent } from 'react';
 
@@ -9,6 +11,7 @@ import { ctw } from '../../../../common/utils/ctw/ctw';
 import { tagToBadgeData } from './consts';
 import { useCaseActionsLogic } from './hooks/useCaseActionsLogic/useCaseActionsLogic';
 import { IActionsProps } from './interfaces';
+import { CreateTicket } from './CreateTicket';
 
 /**
  * @description To be used by {@link Case}. Displays the entity's full name, avatar, and handles the reject/approve mutation.
@@ -38,6 +41,15 @@ export const Actions: FunctionComponent<IActionsProps> = ({
     workflowDefinition,
     isWorkflowCompleted,
   } = useCaseActionsLogic({ workflowId: id, fullName });
+
+  const [isModalOpen, setModalOpen] = useState(false);
+  const handleAddClick = () => {
+    setModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+  };
 
   return (
     <div className={`col-span-2 space-y-2 bg-base-100 px-4 pt-4`}>
@@ -90,7 +102,17 @@ export const Actions: FunctionComponent<IActionsProps> = ({
             }}
           />
         )}
+        <div className={`flex flex-wrap items-center gap-4 self-start pe-[3.35rem]`}>
+          <Button
+          size="md"
+          variant="success"
+          onClick={handleAddClick}
+        >
+          Add Ticket
+        </Button>
+        </div>
       </div>
+      <CreateTicket isOpen={isModalOpen} onClose={handleCloseModal} workflowId={workflowDefinition?.id}/>
     </div>
   );
 };
