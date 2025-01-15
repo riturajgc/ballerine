@@ -1,13 +1,14 @@
 import { CaseCreation } from '@/pages/Entities/components/CaseCreation';
 import { ctw } from '@ballerine/ui';
 import { FunctionComponent } from 'react';
-import { TAssignee } from '../../common/components/atoms/AssignDropdown/AssignDropdown';
-import { MotionScrollArea } from '../../common/components/molecules/MotionScrollArea/MotionScrollArea';
-import { Pagination } from '../../common/components/organisms/Pagination/Pagination';
-import { Cases } from './components/Cases/Cases';
+import { TAssignee } from '@/common/components/atoms/AssignDropdown/AssignDropdown';
+import { MotionScrollArea } from '@/common/components/molecules/MotionScrollArea/MotionScrollArea';
+import { Pagination } from '@/common/components/organisms/Pagination/Pagination';
+import TableComponents from './components/Cases/Cases.Table';
 import { useEntities } from './hooks/useEntities/useEntities';
 import { NoCases } from '@/pages/Entities/components/NoCases/NoCases';
 import { Loader } from 'lucide-react';
+import { Cases } from './components/Cases/Cases';
 
 export const Entities: FunctionComponent = () => {
   const {
@@ -42,13 +43,13 @@ export const Entities: FunctionComponent = () => {
             'h-[calc(100vh-240px)]': !isManualCaseCreationEnabled,
           })}
         >
-          <Cases.List>
+          <TableComponents.List>
             {isLoading
               ? skeletonEntities.map(index => (
-                  <Cases.SkeletonItem key={`cases-list-skeleton-${index}`} />
+                  <TableComponents.SkeletonItem key={`cases-list-skeleton-${index}`} />
                 ))
               : cases?.map(case_ => (
-                  <Cases.Item
+                  <TableComponents.Item
                     key={case_.id}
                     id={case_.id}
                     fullName={case_.entity.name}
@@ -66,7 +67,7 @@ export const Entities: FunctionComponent = () => {
                     entityAvatarUrl={case_.entity?.avatarUrl}
                   />
                 ))}
-          </Cases.List>
+          </TableComponents.List>
         </MotionScrollArea>
         <div className={`divider my-0 px-4`}></div>
         <div className="flex flex-col gap-5 px-4">
@@ -74,7 +75,6 @@ export const Entities: FunctionComponent = () => {
           {isManualCaseCreationEnabled && <CaseCreation />}
         </div>
       </Cases>
-      {/* Display skeleton individual when loading the entities list */}
       {isLoading && (
         <div className="mt-4">
           <Loader className="animate-pulse" />

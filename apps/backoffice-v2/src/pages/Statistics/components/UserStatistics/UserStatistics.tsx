@@ -20,7 +20,7 @@ export const UserStatistics: FunctionComponent<{
         {statistics.map(({ title, stat, description }) => (
           <div key={title} className={'min-h-[10.125rem] rounded-xl bg-[#F6F6F6] p-2'}>
             <Card className={'flex h-full flex-col px-3'}>
-              <CardHeader className={'pb-1'}>{title}</CardHeader>
+              <CardHeader className={'pb-1 text-lg font-semibold'}>{title}</CardHeader>
               <CardContent>{stat}</CardContent>
               {!!description && (
                 <CardFooter className={'mt-auto'}>

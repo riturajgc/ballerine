@@ -54,7 +54,7 @@ export const useUserStatisticsLogic = () => {
   const statistics = [
     {
       title: 'Cases Assigned to you',
-      stat: <span className={'text-2xl font-bold'}>{casesAssignedToUser}</span>,
+      stat: <span className={'text-3xl font-bold'}>{casesAssignedToUser}</span>,
       description: `Out of ${activeCases} active cases`,
     },
     {
@@ -107,7 +107,7 @@ export const useUserStatisticsLogic = () => {
                       backgroundColor: color,
                     }}
                   />
-                  <div className={'flex w-full justify-between'}>
+                  <div className={'flex w-full justify-between text-base'}>
                     <span className={'text-slate-500'}>{name}</span>
                     <span>{value}</span>
                   </div>
@@ -125,7 +125,7 @@ export const useUserStatisticsLogic = () => {
     },
     {
       title: 'Cases Resolved by you',
-      stat: <span className={'text-2xl font-bold'}>{casesResolvedByUser}</span>,
+      stat: <span className={'text-3xl font-bold'}>{casesResolvedByUser}</span>,
       description: 'During the selected time period',
     },
   ] satisfies ReadonlyArray<{
