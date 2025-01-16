@@ -1,43 +1,46 @@
+import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { Button } from '@/common/components/atoms/Button/Button';
 import { ScrollArea } from '@/common/components/molecules/ScrollArea/ScrollArea';
 import { Modal } from '@/common/components/organisms/Modal/Modal';
 import { MultiDocuments } from '@/lib/blocks/components/MultiDocuments/MultiDocuments';
 import { Edit2 } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
 
-const camelToTitleCase = input => {
+const camelToTitleCase = (input: string): string => {
   return input
     .replace(/([a-z])([A-Z])/g, '$1 $2') // Adds space between camelCase words
     .replace(/\b\w/g, char => char.toUpperCase()); // Capitalizes first letter of each word
 };
 
-const RenderObject = ({ obj }) => {
+interface RenderObjectProps {
+  obj: Record<string, any>;
+}
+
+const RenderObject: React.FC<RenderObjectProps> = ({ obj }) => {
   return (
     <>
       {Object.entries(obj).map(([key, value]) => {
-        if (typeof value !== 'object' && value !== null)
+        if (typeof value !== 'object' || value === null) {
           return (
             <div className="space-y-2" key={key}>
               <label className="text-sm font-medium">{camelToTitleCase(key)}:</label>
-              {/* {typeof value === 'object' && value !== null ? (
-            <RenderObject obj={value} />
-          ) : (
-            <div className="flex w-full max-w-[30ch] items-center break-all rounded-md p-1 pl-[0.3rem] pt-1.5 text-sm">
-              {`${value}`}
-            </div>
-          )} */}
               <div className="flex w-full max-w-[30ch] items-center break-all rounded-md p-1 pl-[0.3rem] pt-1.5 text-sm">
                 {`${value}`}
               </div>
             </div>
           );
+        }
         return null;
       })}
     </>
   );
 };
 
-const RenderForm = ({ obj, onChange }) => {
+interface RenderFormProps {
+  obj: Record<string, any>;
+  onChange: (key: string, value: string) => void;
+}
+
+const RenderForm: React.FC<RenderFormProps> = ({ obj, onChange }) => {
   return (
     <>
       {Object.entries(obj).map(([key, value]) => {
@@ -54,8 +57,8 @@ const RenderForm = ({ obj, onChange }) => {
             <label className="text-sm font-medium">{camelToTitleCase(key)}:</label>
             <input
               type="text"
-              value={value}
-              onChange={e => onChange(key, e.target.value)}
+              value={value as string}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(key, e.target.value)}
               className="w-full rounded-md border border-gray-300 p-2 text-sm"
             />
           </div>
@@ -65,10 +68,38 @@ const RenderForm = ({ obj, onChange }) => {
   );
 };
 
-const EditableCase = ({ workflow }) => {
-  const [activeTab, setActiveTab] = useState('documents');
-  const [openModal, setOpenModal] = useState(false);
-  const [formData, setFormData] = useState({});
+interface EditableCaseProps {
+  workflow: Workflow;
+}
+
+interface Workflow {
+  context: {
+    entity: {
+      data: Record<string, any>;
+    };
+    documents?: Document[];
+  };
+}
+
+interface Document {
+  category: string;
+  type: string;
+  properties: Record<string, any>;
+  pages: Page[];
+}
+
+interface Page {
+  uri: string;
+  metadata: {
+    title?: string;
+  };
+  type: string;
+}
+
+const EditableCase: React.FC<EditableCaseProps> = ({ workflow }) => {
+  const [activeTab, setActiveTab] = useState<'summary' | 'documents'>('documents');
+  const [openModal, setOpenModal] = useState<boolean>(false);
+  const [formData, setFormData] = useState<Record<string, any>>({});
 
   useEffect(() => {
     if (openModal && workflow?.context?.entity?.data) {
@@ -76,11 +107,11 @@ const EditableCase = ({ workflow }) => {
     }
   }, [openModal, workflow?.context?.entity?.data]);
 
-  const handleToggle = tab => {
+  const handleToggle = (tab: 'summary' | 'documents') => {
     setActiveTab(tab);
   };
 
-  const handleInputChange = (key, value) => {
+  const handleInputChange = (key: string, value: string) => {
     setFormData(prevData => ({
       ...prevData,
       [key]: value,
@@ -92,7 +123,7 @@ const EditableCase = ({ workflow }) => {
     setOpenModal(false);
   };
 
-  const updateWorkflowData = updatedData => {
+  const updateWorkflowData = (updatedData: Record<string, any>) => {
     console.log('Updated Data:', updatedData);
   };
 
@@ -144,7 +175,7 @@ const EditableCase = ({ workflow }) => {
         </button>
       </div>
 
-      <ScrollArea orientation={'vertical'} className={'h-[73vh]'}>
+      <ScrollArea orientation="vertical" className="h-[73vh]">
         {activeTab === 'summary' && (
           <div className="me-4 rounded-lg border bg-card text-card-foreground shadow-[0_4px_4px_0_rgba(174,174,174,0.0625)]">
             <div className="grid gap-2 p-6 pt-0">
@@ -161,7 +192,7 @@ const EditableCase = ({ workflow }) => {
                     title="Edit Information"
                   >
                     <form
-                      onSubmit={e => {
+                      onSubmit={(e: FormEvent) => {
                         e.preventDefault();
                         handleSave();
                       }}
@@ -182,7 +213,9 @@ const EditableCase = ({ workflow }) => {
               <div className="m-2 rounded p-1 pt-4">
                 <div className="flex h-full flex-col">
                   <div className="grid grid-cols-3 gap-4 gap-y-6">
-                    <RenderObject obj={workflow?.context?.entity?.data} />
+                    {workflow?.context?.entity?.data && (
+                      <RenderObject obj={workflow.context.entity.data} />
+                    )}
                   </div>
                 </div>
               </div>
@@ -191,7 +224,7 @@ const EditableCase = ({ workflow }) => {
         )}
         {activeTab === 'documents' && (
           <div className="flex h-full flex-col gap-4">
-            {workflow?.context.documents?.map((doc, index) => (
+            {workflow?.context.documents?.map((doc: Document, index: number) => (
               <div
                 key={index}
                 className="me-4 rounded-lg border bg-card text-card-foreground shadow-[0_4px_4px_0_rgba(174,174,174,0.0625)]"
@@ -204,7 +237,7 @@ const EditableCase = ({ workflow }) => {
                     <div className="mt-6 flex justify-end space-x-4 rounded p-2">
                       {/* Add Buttons */}
                       <Button size="sm" variant="warning" className="py-1">
-                        Re upload the document
+                        Re-upload the document
                       </Button>
                       <Button size="sm" variant="destructive" className="py-1">
                         Reject
@@ -225,7 +258,8 @@ const EditableCase = ({ workflow }) => {
                   </div>
                   <MultiDocuments
                     value={{
-                      data: doc.pages.map(item => ({
+                      isLoading: !!doc,
+                      data: doc.pages.map((item: Page) => ({
                         imageUrl: item.uri,
                         title: item.metadata.title || 'Default Title',
                         fileType: item.type,
