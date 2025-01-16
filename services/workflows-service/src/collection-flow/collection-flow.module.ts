@@ -39,6 +39,7 @@ import { Module } from '@nestjs/common';
 import { RuleEngineModule } from '@/rule-engine/rule-engine.module';
 import { SentryService } from '@/sentry/sentry.service';
 import { WorkflowModule } from '@/workflow/workflow.module';
+import { CollectionFlowFilesInternalController } from './controllers/collection-flow.files.internal.controller';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { WorkflowModule } from '@/workflow/workflow.module';
     CollectionFlowFilesController,
     CollectionFlowBusinessController,
     CollectionFlowEndUserController,
+    CollectionFlowFilesInternalController
   ],
   providers: [
     CollectionFlowService,
