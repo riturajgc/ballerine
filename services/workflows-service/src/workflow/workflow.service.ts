@@ -1727,6 +1727,7 @@ export class WorkflowService {
           workflowToken,
           ballerineEntityId: entityId,
           entities,
+          newWorkflowCreated
         },
       ] as const;
     });

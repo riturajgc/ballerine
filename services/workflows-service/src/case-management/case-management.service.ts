@@ -6,12 +6,14 @@ import { ajv } from '@/common/ajv/ajv.validator';
 import { WorkflowService } from '@/workflow/workflow.service';
 import { Injectable } from '@nestjs/common';
 import { TWorkflowDefinitionWithTransitionSchema } from '@/workflow-defintion/types';
+import { RoundRobinService } from '@/user/round-robin.service';
 
 @Injectable()
 export class CaseManagementService {
   constructor(
     protected readonly workflowDefinitionService: WorkflowDefinitionService,
     protected readonly workflowService: WorkflowService,
+    protected readonly roundRobinService: RoundRobinService,
   ) {}
 
   async create(
@@ -42,6 +44,17 @@ export class CaseManagementService {
         salesforceRecordId: inputWorkflow.salesforceRecordId,
       }),
     });
+
+    const definitionConfig = actionResult[0]!.workflowDefinition.config;
+    const runTime = actionResult[0]!.workflowRuntimeData;
+    if(definitionConfig?.autoAssignToUser && actionResult[0].newWorkflowCreated) {
+        const assignee = await this.roundRobinService.getNextUser("ticket"); // only ticket exists right now. Change logic when others are introduced
+        try {
+            await this.workflowService.assignWorkflowToUser(runTime.id, { assigneeId: assignee.userId }, projectIds, currentProjectId);
+        } catch(err) {
+            await this.roundRobinService.resetNextUser("ticket");
+        }
+    }
 
     return {
       workflowDefinitionId: actionResult[0]!.workflowDefinition.id,

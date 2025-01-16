@@ -62,6 +62,13 @@ export const ConfigSchema = z
     hasUboOngoingMonitoring: z.boolean().optional(),
     maxBusinessReports: z.number().nonnegative().optional(),
     isMerchantMonitoringEnabled: z.boolean().optional(),
+    autoAssignToUser: z.boolean().optional(),
+    documentsRequired: z.record(z.string(), z.array(z.object({ 
+        category: z.string(), 
+        name: z.string(), 
+        specific: z.boolean().optional() 
+    }))).optional(),
+    failedStates: z.array(z.string()).optional(),
   })
   .strict()
   .optional();

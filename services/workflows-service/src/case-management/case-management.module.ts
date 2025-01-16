@@ -6,6 +6,8 @@ import { WorkflowModule } from '@/workflow/workflow.module';
 import { Module } from '@nestjs/common';
 import { AlertModule } from '@/alert/alert.module';
 import { EndUserModule } from '@/end-user/end-user.module';
+import { RoundRobinService } from '@/user/round-robin.service';
+import { RoundRobinRepository } from '@/user/round-robin.repository';
 
 @Module({
   imports: [
@@ -15,7 +17,7 @@ import { EndUserModule } from '@/end-user/end-user.module';
     EndUserModule,
     AlertModule,
   ],
-  providers: [CaseManagementService],
+  providers: [CaseManagementService, RoundRobinService, RoundRobinRepository],
   controllers: [CaseManagementController],
 })
 export class CaseManagementModule {}

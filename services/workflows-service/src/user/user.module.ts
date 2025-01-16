@@ -14,6 +14,6 @@ import { ProjectModule } from '@/project/project.module';
   imports: [ACLModule, forwardRef(() => AuthModule), ProjectModule],
   controllers: [UserControllerInternal],
   providers: [UserRepository, RoundRobinRepository, UserService, RoundRobinService],
-  exports: [ACLModule, AuthModule, UserService, RoundRobinService],
+  exports: [ACLModule, AuthModule, UserService, RoundRobinService, RoundRobinRepository],
 })
 export class UserModule {}
