@@ -16,10 +16,14 @@ import type { TProjectId, TProjectIds } from '@/types';
 import { Injectable } from '@nestjs/common';
 import { Static } from '@sinclair/typebox';
 import { HomeMetricsSchema } from '@/metrics/schemas/home-metrics.schema';
+import { PrismaClient, User } from '@prisma/client';
 
 @Injectable()
 export class MetricsService {
-  constructor(private readonly metricsRepository: MetricsRepository) {}
+  constructor(
+    private readonly metricsRepository: MetricsRepository,
+    private readonly prismaClient: PrismaClient
+  ) {}
 
   async getRuntimesStatusCaseCount(
     params: GetRuntimeStatusCaseCountParams,
@@ -109,5 +113,138 @@ export class MetricsService {
         ),
       },
     };
+  }
+
+  async getDashboardMetrics(currentProjectId: TProjectId, userId: string) {
+    const user = await this.prismaClient.user.findUnique({
+        where: {
+          id: userId,
+        },
+      });
+    if(!user) throw { status: 404, message: 'User not found' };
+
+    const userRoles = user.roles as string[];
+    const isManager = userRoles?.includes('manager');
+    const metricsRequestAsync = [
+        this.getDailyWorkflowRuntimeCount(7, currentProjectId, isManager, userId),
+        this.getRuntimeCountByWorkflows(currentProjectId, isManager, userId),
+        this.getRuntimeCountByStatus(currentProjectId, isManager, userId),
+        this.getWorkflowSpecificCounts(currentProjectId, isManager, userId),
+    ]
+    const values = await Promise.all(metricsRequestAsync);
+    return {
+        dailyCount: values[0],
+        countByCategory: values[1],
+        countByStatus: values[2],
+        countByWorkflow: values[3],
+    };
+  }
+
+  async getDailyWorkflowRuntimeCount(span: number, projectId: string, isManager: boolean, userId: string) {
+    const nDaysAgo = new Date();    
+    nDaysAgo.setDate(nDaysAgo.getDate() - span);
+    const userIdToUse = isManager ? null : userId;
+    const runtimes = await this.prismaClient.workflowRuntimeData.groupBy({
+        by: ['createdAt'],
+        _count: {
+          _all: true,
+        },
+        where: {
+          createdAt: {
+            gte: nDaysAgo,
+          },
+          projectId: projectId,
+          OR: [
+            { assigneeId: userIdToUse },
+            { assigneeId: null },
+          ],
+        },
+        orderBy: {
+          createdAt: 'asc',
+        },
+      });
+
+      const groupedByDate = runtimes.reduce((acc: Record<string, { date: string; count: number }>, runtime) => {
+        const date = runtime.createdAt.toISOString().split('T')[0] as string;
+        if (!acc[date]) acc[date!] = { date, count: 0 };
+        acc[date]!.count += runtime._count._all;
+        return acc;
+      }, {});
+      
+    const finalResults = Object.values(groupedByDate);
+    return finalResults;
+  }
+
+  async getRuntimeCountByWorkflows(projectId: string, isManager: boolean, userId: string) {
+    const workflows = await this.prismaClient.workflowDefinition.findMany({
+        where: {
+          projectId: projectId,
+        },
+    });
+    const runtimes = await this.prismaClient.workflowRuntimeData.groupBy({
+        by: ['workflowDefinitionId'],
+        _count: {
+          _all: true,
+        },
+        orderBy: {
+          workflowDefinitionId: 'asc',
+        },
+        where: {
+            projectId: projectId,
+            assigneeId: isManager ? undefined : userId,
+
+        },
+      });
+    return runtimes.map((runtime) => {
+        return {
+            name: workflows.find((workflow)=> workflow.id === runtime.workflowDefinitionId)?.name,
+            category: runtime.workflowDefinitionId,
+            count: runtime._count._all,
+    }});
+  }
+
+  async getRuntimeCountByStatus(projectId: string, isManager: boolean, userId: string) {
+    const runtimes = await this.prismaClient.workflowRuntimeData.groupBy({
+        by: ['status'],
+        _count: {
+          _all: true,
+        },
+        orderBy: {
+          status: 'asc',
+        },
+        where: {
+            projectId: projectId,
+            assigneeId: isManager ? undefined : userId,
+        },
+      });
+    return runtimes.map((runtime) => {
+        return {
+            category: runtime.status,
+            count: runtime._count._all,
+    }});
+  }
+
+  async getWorkflowSpecificCounts(projectId: string, isManager: boolean, userId: string) {
+    const runtimes = await this.prismaClient.workflowRuntimeData.groupBy({
+        by: ['workflowDefinitionId', 'status'],
+        _count: {
+          _all: true,
+        },
+        orderBy: [
+          { workflowDefinitionId: 'asc' },
+          { status: 'asc' },
+        ],
+        where: {
+          projectId: projectId,
+          assigneeId: isManager ? undefined : userId,
+        },
+      });
+      
+      const formattedRuntimes = runtimes.map(runtime => ({
+        workflowDefinitionId: runtime.workflowDefinitionId,
+        status: runtime.status,
+        count: runtime._count._all,
+      }));      
+      return formattedRuntimes;
   }
 }

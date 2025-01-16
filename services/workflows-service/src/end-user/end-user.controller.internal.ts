@@ -59,4 +59,21 @@ export class EndUserControllerInternal {
       throw err;
     }
   }
+
+  @common.Post("/get-external")
+  @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @swagger.ApiForbiddenResponse()
+  async getExternalEndUsers(
+    @common.Body() body: any
+  ): Promise<any> {
+    try {
+      return await this.service.getExternalEndUsers(body);
+    } catch (err) {
+      if (isRecordNotFoundError(err)) {
+        throw new errors.NotFoundException(`No resource was found for ${JSON.stringify(body)}`);
+      }
+
+      throw err;
+    }
+  }
 }

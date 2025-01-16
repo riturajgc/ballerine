@@ -116,4 +116,79 @@ export class EndUserService {
       },
     });
   }
+
+  async getExternalEndUsers(body: any) {
+    return [
+      {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'johndoe@gmail.com',
+          phoneNumber: '123456789'
+      },
+      {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'janesmith@gmail.com',
+          phoneNumber: '987654321'
+      },
+      {
+          id: '3',
+          firstName: 'Michael',
+          lastName: 'Brown',
+          email: 'michaelbrown@gmail.com',
+          phoneNumber: '456789123'
+      },
+      {
+          id: '4',
+          firstName: 'Emily',
+          lastName: 'Johnson',
+          email: 'emilyjohnson@gmail.com',
+          phoneNumber: '789123456'
+      },
+      {
+          id: '5',
+          firstName: 'Daniel',
+          lastName: 'Wilson',
+          email: 'danielwilson@gmail.com',
+          phoneNumber: '321654987'
+      },
+      {
+          id: '6',
+          firstName: 'Olivia',
+          lastName: 'Davis',
+          email: 'oliviadavis@gmail.com',
+          phoneNumber: '654987321'
+      },
+      {
+          id: '7',
+          firstName: 'William',
+          lastName: 'Martinez',
+          email: 'williammartinez@gmail.com',
+          phoneNumber: '987321654'
+      },
+      {
+          id: '8',
+          firstName: 'Sophia',
+          lastName: 'Taylor',
+          email: 'sophiataylor@gmail.com',
+          phoneNumber: '123789456'
+      },
+      {
+          id: '9',
+          firstName: 'James',
+          lastName: 'Anderson',
+          email: 'jamesanderson@gmail.com',
+          phoneNumber: '789456123'
+      },
+      {
+          id: '10',
+          firstName: 'Isabella',
+          lastName: 'Thomas',
+          email: 'isabellathomas@gmail.com',
+          phoneNumber: '456123789'
+      }
+  ] 
+  }
 }
