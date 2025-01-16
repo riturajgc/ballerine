@@ -28,6 +28,7 @@ import { Static, Type } from '@sinclair/typebox';
 import { Validate } from 'ballerine-nestjs-typebox';
 import { HomeMetricsSchema } from '@/metrics/schemas/home-metrics.schema';
 import { CurrentProject } from '@/common/decorators/current-project.decorator';
+import type { Request } from 'express';
 
 @ApiTags('Metrics')
 @Controller('/metrics')
@@ -136,4 +137,18 @@ export class MetricsController {
   ): Promise<Static<typeof HomeMetricsSchema>> {
     return await this.metricsService.getHomeMetrics(currentProjectId);
   }
+
+  @common.Get('dashboard')
+    @ApiResponse({
+        status: 403,
+        description: 'Forbidden',
+        schema: Type.Record(Type.String(), Type.Unknown()),
+    })
+    async getDashboardMetrics(
+        @CurrentProject() currentProjectId: TProjectId,
+        @common.Req() request: Request,
+    ) {
+        const loggedInUser = (request.user?.user as { id: string })?.id;
+        return await this.metricsService.getDashboardMetrics(currentProjectId, loggedInUser);
+    }
 }
