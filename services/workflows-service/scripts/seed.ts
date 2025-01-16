@@ -497,7 +497,16 @@ async function seed() {
       name: 'sr-onboarding',
       version: 1,
       definitionType: 'statechart-json',
-      config: {},
+      config: {
+        documentsRequired: {
+          id_front_ocr_verification: [],
+          id_back_ocr_verification: [{category: 'id_card_front': name: 'id_card_front', specific: true}],
+          id_front_verification: [{category: 'id_card_front': name: 'id_card_front', specific: true}, {category: 'id_card_back': name: 'id_card_back', specific: true}],
+          id_back_verification: [{category: 'id_card_front': name: 'id_card_front', specific: true}, {category: 'id_card_back': name: 'id_card_back', specific: true}],
+          face_verification: [{category: 'id_card_front': name: 'id_card_front', specific: true}, {category: 'id_card_back': name: 'id_card_back', specific: true}],
+        },
+        failedStates: ['id_front_verification_failed', 'id_back_verification_failed', 'id_back_ocr_verification_failed', 'id_front_ocr_verification_failed', 'face_verification_failed']
+      },
       contextSchema: {
         type: 'json-schema',
         schema: defaultContextSchema,
@@ -505,12 +514,6 @@ async function seed() {
       definition: {
         id: 'onboarding',
         states: {
-          sign_up: {
-            tags: ["sign_up"],
-            on: {
-              success: 'id_front_ocr_verification',
-            },
-          },
           onboarded: {
             type: 'final',
             tags: ["onboarded"]
@@ -581,7 +584,7 @@ async function seed() {
             },
           },
         },
-        initial: 'sign_up',
+        initial: 'id_front_ocr_verification',
       },
       projectId: project1.id,
     },
@@ -593,7 +596,16 @@ async function seed() {
       name: 'sr-transaction',
       version: 1,
       definitionType: 'statechart-json',
-      config: {},
+      config: {
+        documentsRequired: {
+          linked_bank_account: [],
+          beneficiary_account_added: [],
+          add_beneficiary_account: [],
+          pending_from_bank: [],
+          declined_by_bank: [],
+        },
+        failedStates: ['initiate_transaction_failed', 'link_bank_acco_failed']
+      },
       contextSchema: {
         type: 'json-schema',
         schema: defaultContextSchema,
@@ -653,7 +665,14 @@ async function seed() {
       name: 'sr-others',
       version: 1,
       definitionType: 'statechart-json',
-      config: {},
+      config: {
+        documentsRequired: {
+          open: [],
+          pending: [],
+          closed: []
+        },
+        failedStates: []
+      },
       contextSchema: {
         type: 'json-schema',
         schema: defaultContextSchema,
