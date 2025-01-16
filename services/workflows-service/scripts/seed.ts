@@ -499,11 +499,16 @@ async function seed() {
       definitionType: 'statechart-json',
       config: {
         documentsRequired: {
-          id_front_ocr_verification: [],
-          id_back_ocr_verification: [{category: 'id_card_front': name: 'id_card_front', specific: true}],
-          id_front_verification: [{category: 'id_card_front': name: 'id_card_front', specific: true}, {category: 'id_card_back': name: 'id_card_back', specific: true}],
-          id_back_verification: [{category: 'id_card_front': name: 'id_card_front', specific: true}, {category: 'id_card_back': name: 'id_card_back', specific: true}],
-          face_verification: [{category: 'id_card_front': name: 'id_card_front', specific: true}, {category: 'id_card_back': name: 'id_card_back', specific: true}],
+          id_front_ocr_verification: [{category: 'id_card_front_ocr': name: 'id_card_front_ocr', specific: false}],
+          id_back_ocr_verification: [{category: 'id_card_front_ocr': name: 'id_card_front_ocr', specific: false}, {category: 'id_card_back_ocr': name: 'id_card_back_ocr', specific: false}],
+          id_front_verification: [{category: 'id_card_front_ocr': name: 'id_card_front_ocr', specific: false}, {category: 'id_card_back_ocr': name: 'id_card_back_ocr', specific: false}, {category: 'id_card_front': name: 'id_card_front', specific: false}],
+          id_back_verification: [{category: 'id_card_front_ocr': name: 'id_card_front_ocr', specific: false}, {category: 'id_card_back_ocr': name: 'id_card_back_ocr', specific: false}, {category: 'id_card_front': name: 'id_card_front', specific: false}, {category: 'id_card_back': name: 'id_card_back', specific: false}],
+          face_verification: [{category: 'id_card_front_ocr': name: 'id_card_front_ocr', specific: false}, {category: 'id_card_back_ocr': name: 'id_card_back_ocr', specific: false}, {category: 'id_card_front': name: 'id_card_front', specific: false}, {category: 'id_card_back': name: 'id_card_back', specific: false}],
+          id_front_ocr_verification_failed: [{category: 'id_card_front_ocr': name: 'id_card_front_ocr', specific: true}],
+          id_back_ocr_verification_failed: [{category: 'id_card_front_ocr': name: 'id_card_front_ocr', specific: false}, {category: 'id_card_back_ocr': name: 'id_card_back_ocr', specific: true}],
+          id_front_verification_failed: [{category: 'id_card_front_ocr': name: 'id_card_front_ocr', specific: false}, {category: 'id_card_back_ocr': name: 'id_card_back_ocr', specific: false}, {category: 'id_card_front': name: 'id_card_front', specific: true}],
+          id_back_verification_failed: [{category: 'id_card_front_ocr': name: 'id_card_front_ocr', specific: false}, {category: 'id_card_back_ocr': name: 'id_card_back_ocr', specific: false}, {category: 'id_card_front': name: 'id_card_front', specific: false}, {category: 'id_card_back': name: 'id_card_back', specific: true}],
+          face_verification_failed: [{category: 'id_card_front_ocr': name: 'id_card_front_ocr', specific: false}, {category: 'id_card_back_ocr': name: 'id_card_back_ocr', specific: false}, {category: 'id_card_front': name: 'id_card_front', specific: false}, {category: 'id_card_back': name: 'id_card_back', specific: false}],
         },
         failedStates: ['id_front_verification_failed', 'id_back_verification_failed', 'id_back_ocr_verification_failed', 'id_front_ocr_verification_failed', 'face_verification_failed']
       },
