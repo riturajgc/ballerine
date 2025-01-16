@@ -47,7 +47,7 @@ export class CaseManagementService {
 
     const definitionConfig = actionResult[0]!.workflowDefinition.config;
     const runTime = actionResult[0]!.workflowRuntimeData;
-    if((definitionConfig?.autoAssignToUser ||  true) && actionResult[0].newWorkflowCreated) {
+    if(definitionConfig?.autoAssignToUser && actionResult[0].newWorkflowCreated) {
         const assignee = await this.roundRobinService.getNextUser("ticket"); // only ticket exists right now. Change logic when others are introduced
         try {
             await this.workflowService.assignWorkflowToUser(runTime.id, { assigneeId: assignee.userId }, projectIds, currentProjectId);
