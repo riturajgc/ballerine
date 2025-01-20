@@ -27,6 +27,13 @@ const camelToTitleCase = (input: string): string => {
     .replace(/\b\w/g, char => char.toUpperCase()); // Capitalizes first letter of each word
 };
 
+function underscoreToTitleCase(str: string) {
+  return str
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize each word
+    .join(' ');
+}
+
 const RenderObject: React.FC<RenderObjectProps> = ({ obj }) => {
   return (
     <>
@@ -131,6 +138,7 @@ interface EditableCaseProps {
     runtimeId: string,
     updateData: WorkflowUpdateBody,
   ) => Promise<WorkflowUpdateResponse>;
+  useSelectEntityOnMount: () => void;
 }
 
 const EditableCase: React.FC<EditableCaseProps> = ({
@@ -138,6 +146,7 @@ const EditableCase: React.FC<EditableCaseProps> = ({
   uploadFile,
   createCase,
   updateWorkflow,
+  useSelectEntityOnMount,
 }) => {
   const [activeTab, setActiveTab] = useState('summary');
   const [openModal, setOpenModal] = useState<boolean>(false);
@@ -149,12 +158,6 @@ const EditableCase: React.FC<EditableCaseProps> = ({
   >([]);
   const isFailedState =
     workflow.state && workflow.workflowDefinition.config.failedStates?.includes(workflow.state);
-
-  const failedDocuments = isFailedState
-    ? workflow.workflowDefinition.config.documentsRequired[workflow.state]?.filter(
-        doc => doc.specific === false,
-      )
-    : [];
 
   const requiredDocuments = workflow.workflowDefinition.config.documentsRequired[
     currentState
@@ -321,12 +324,19 @@ const EditableCase: React.FC<EditableCaseProps> = ({
                   className="me-4 rounded-lg border bg-card text-card-foreground shadow-[0_4px_4px_0_rgba(174,174,174,0.0625)]"
                 >
                   <div className="grid grid-cols-2 gap-2 p-6 pt-0">
-                    <div className="col-span-full grid grid-cols-2 items-start">
-                      <h2 className="ml-1 mt-6 px-2 text-2xl font-bold">
-                        {`${camelToTitleCase(doc.category)} - ${camelToTitleCase(doc.type)}`}
-                      </h2>
-                      {/* Example: If you also want to show 'Re-upload' or 'Accept' 
-                          only if doc is required or if the state is failed, adapt this logic. */}
+                    <div className="col-span-full items-start justify-between">
+                      <div className="ml-1 mt-6 flex justify-between px-2 text-2xl font-bold">
+                        <span>{underscoreToTitleCase(doc.category)}</span>
+                        {isFailedState &&
+                          workflow?.workflowDefinition.config.documentsRequired[currentState]?.find(
+                            doc => doc.specific === true,
+                          ) && (
+                            <div>
+                              <Button variant="warning">Re-upload the document</Button>{' '}
+                              <Button variant="success">Accept</Button>
+                            </div>
+                          )}
+                      </div>
                     </div>
 
                     {/* Document's properties */}
@@ -345,9 +355,10 @@ const EditableCase: React.FC<EditableCaseProps> = ({
                       value={{
                         isLoading: !!doc,
                         data: doc.pages.map((item: Page) => ({
-                          imageUrl: item.ballerineFileId,
+                          imageUrl: '',
                           title: '',
                           fileType: item.type,
+                          id: item.ballerineFileId,
                         })),
                       }}
                     />

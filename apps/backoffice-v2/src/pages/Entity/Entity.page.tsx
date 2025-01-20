@@ -47,6 +47,7 @@ export const Entity = () => {
           updateWorkflow={updateWorkflow}
           uploadFile={uploadFile}
           createCase={createCase}
+          useSelectEntityOnMount={useSelectEntityOnMount}
         />
 
         {/* <Case.Content key={selectedEntity?.id}>
