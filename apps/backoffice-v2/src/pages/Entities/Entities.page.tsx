@@ -25,6 +25,7 @@ export const Entities: FunctionComponent = () => {
     caseCount,
     skeletonEntities,
     isManualCaseCreationEnabled,
+    workflowId,
   } = useEntities();
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export const Entities: FunctionComponent = () => {
         onSortDirToggle={onSortDirToggle}
         search={search}
         count={caseCount}
+        workflowId={workflowId}
       >
         <MotionScrollArea
           className={ctw({

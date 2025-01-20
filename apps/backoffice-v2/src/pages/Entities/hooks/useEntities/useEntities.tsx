@@ -100,5 +100,6 @@ export const useEntities = () => {
     skeletonEntities,
     entity,
     isManualCaseCreationEnabled: workflowDefinition?.config?.enableManualCreation,
+    workflowId: workflowDefinition?.id,
   };
 };

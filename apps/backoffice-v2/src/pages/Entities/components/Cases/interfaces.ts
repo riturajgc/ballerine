@@ -18,4 +18,5 @@ export interface ICasesProps extends DivComponent {
   onSortDirToggle: () => void;
   search: string;
   count: number;
+  workflowId: string;
 }
