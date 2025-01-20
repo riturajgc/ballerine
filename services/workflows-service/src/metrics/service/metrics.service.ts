@@ -126,7 +126,7 @@ export class MetricsService {
     const userRoles = user.roles as string[];
     const isManager = userRoles?.includes('manager');
     const metricsRequestAsync = [
-        this.getDailyWorkflowRuntimeCount(7, currentProjectId, isManager, userId),
+        this.getDailyWorkflowRuntimeCount(10, currentProjectId, isManager, userId),
         this.getRuntimeCountByWorkflows(currentProjectId, isManager, userId),
         this.getRuntimeCountByStatus(currentProjectId, isManager, userId),
         this.getWorkflowSpecificCounts(currentProjectId, isManager, userId),
@@ -219,7 +219,7 @@ export class MetricsService {
       });
     return runtimes.map((runtime) => {
         return {
-            category: runtime.status,
+            status: runtime.status,
             count: runtime._count._all,
     }});
   }
