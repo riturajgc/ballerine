@@ -500,28 +500,22 @@ async function seed() {
       config: {
         documentsRequired: {
           id_front_ocr_verification: [
-            { category: 'id_card_front_ocr', name: 'id_card_front_ocr', specific: false },
+            { category: 'id_card_front_ocr', name: 'Id Card Front Ocr', specific: true },
           ],
           id_back_ocr_verification: [
-            { category: 'id_card_front_ocr', name: 'id_card_front_ocr', specific: false },
-            { category: 'id_card_back_ocr', name: 'id_card_back_ocr', specific: false },
+            { category: 'id_card_front_ocr', name: 'Id Card Front Ocr', specific: false },
+            { category: 'id_card_back_ocr', name: 'id_card_back_ocr', specific: true },
           ],
-          id_front_verification: [
+          id_nfc_verification: [
             { category: 'id_card_front_ocr', name: 'id_card_front_ocr', specific: false },
             { category: 'id_card_back_ocr', name: 'id_card_back_ocr', specific: false },
-            { category: 'id_card_front', name: 'id_card_front', specific: false },
-          ],
-          id_back_verification: [
-            { category: 'id_card_front_ocr', name: 'id_card_front_ocr', specific: false },
-            { category: 'id_card_back_ocr', name: 'id_card_back_ocr', specific: false },
-            { category: 'id_card_front', name: 'id_card_front', specific: false },
-            { category: 'id_card_back', name: 'id_card_back', specific: false },
+            { category: 'id_card_nfc', name: 'Id Card NFC photo', specific: true },
           ],
           face_verification: [
             { category: 'id_card_front_ocr', name: 'id_card_front_ocr', specific: false },
             { category: 'id_card_back_ocr', name: 'id_card_back_ocr', specific: false },
-            { category: 'id_card_front', name: 'id_card_front', specific: false },
-            { category: 'id_card_back', name: 'id_card_back', specific: false },
+            { category: 'id_nfc_verification', name: 'id_nfc_verification', specific: false },
+            { category: 'face_photo', name: 'Face Verification Photo', specific: true },
           ],
           id_front_ocr_verification_failed: [
             { category: 'id_card_front_ocr', name: 'id_card_front_ocr', specific: true },
@@ -530,27 +524,20 @@ async function seed() {
             { category: 'id_card_front_ocr', name: 'id_card_front_ocr', specific: false },
             { category: 'id_card_back_ocr', name: 'id_card_back_ocr', specific: true },
           ],
-          id_front_verification_failed: [
+          id_nfc_verification_failed: [
             { category: 'id_card_front_ocr', name: 'id_card_front_ocr', specific: false },
             { category: 'id_card_back_ocr', name: 'id_card_back_ocr', specific: false },
-            { category: 'id_card_front', name: 'id_card_front', specific: true },
-          ],
-          id_back_verification_failed: [
-            { category: 'id_card_front_ocr', name: 'id_card_front_ocr', specific: false },
-            { category: 'id_card_back_ocr', name: 'id_card_back_ocr', specific: false },
-            { category: 'id_card_front', name: 'id_card_front', specific: false },
-            { category: 'id_card_back', name: 'id_card_back', specific: true },
+            { category: 'id_nfc_verification', name: 'id_nfc_verification', specific: true },
           ],
           face_verification_failed: [
             { category: 'id_card_front_ocr', name: 'id_card_front_ocr', specific: false },
             { category: 'id_card_back_ocr', name: 'id_card_back_ocr', specific: false },
-            { category: 'id_card_front', name: 'id_card_front', specific: false },
-            { category: 'id_card_back', name: 'id_card_back', specific: false },
+            { category: 'face_photo', name: 'Face Verification Photo', specific: true },
+            { category: 'id_nfc_verification', name: 'id_nfc_verification', specific: false },
           ],
         },
         failedStates: [
-          'id_front_verification_failed',
-          'id_back_verification_failed',
+          'id_nfc_verification_failed',
           'id_back_ocr_verification_failed',
           'id_front_ocr_verification_failed',
           'face_verification_failed',
@@ -567,25 +554,24 @@ async function seed() {
             type: 'final',
             tags: ['onboarded'],
           },
-          id_back_verification: {
-            tags: ['id_back_verification'],
+          id_nfc_verification: {
+            tags: ['id_nfc_verification'],
             on: {
-              failure: 'id_back_verification_failed',
+              failure: 'id_nfc_verification_failed',
               success: 'face_verification',
             },
           },
-          id_front_verification: {
-            tags: ['id_front_verification'],
+          id_nfc_verification_failed: {
+            tags: ['id_nfc_verification_failed'],
             on: {
-              failure: 'id_front_verification_failed',
-              success: 'id_back_verification',
+              manual_approval: 'face_verification',
             },
           },
           id_back_ocr_verification: {
             tags: ['id_back_ocr_verification'],
             on: {
               failure: 'id_back_ocr_verification_failed',
-              success: 'id_front_verification',
+              success: 'id_nfc_verification',
             },
           },
           id_front_ocr_verification: {
@@ -610,7 +596,7 @@ async function seed() {
           id_back_ocr_verification_failed: {
             tags: ['id_back_ocr_verification_failed'],
             on: {
-              manual_approval: 'id_front_verification',
+              manual_approval: 'id_nfc_verification',
             },
           },
           id_front_ocr_verification_failed: {
@@ -653,7 +639,7 @@ async function seed() {
           pending_from_bank: [],
           declined_by_bank: [],
         },
-        failedStates: ['initiate_transaction_failed', 'link_bank_acco_failed'],
+        failedStates: ['initiate_transaction_failed', 'link_bank_account_failed'],
       },
       contextSchema: {
         type: 'json-schema',
@@ -676,7 +662,7 @@ async function seed() {
           link_bank_account: {
             on: {
               success: 'beneficiary_account_added',
-              failure: 'link_bank_acco_failed',
+              failure: 'link_bank_account_failed',
             },
           },
           link_bank_account_failed: {
