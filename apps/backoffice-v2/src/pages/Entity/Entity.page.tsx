@@ -21,9 +21,71 @@ export const Entity = () => {
     navigate(`/${locale}/case-management/entities${search}`);
   };
 
-  useEffect(() => {
-    console.log('workflow?.context?.entity?.data: ', workflow?.context?.entity?.data);
-  }, [workflow]);
+  const sampleDocumentsData = [
+    {
+      id: '1',
+      category: 'financial',
+      type: 'invoice',
+      properties: {
+        id: '12345',
+        vendor: 'ABC Corporation',
+        date: '2025-01-15',
+        amount: '$5000',
+      },
+      pages: [
+        {
+          uri: 'https://placehold.co/600x400',
+          metadata: { title: 'Invoice Page 1' },
+          type: 'image/jpeg',
+        },
+        {
+          uri: 'https://placehold.co/600x400',
+          metadata: { title: 'Invoice Page 2' },
+          type: 'image/jpeg',
+        },
+      ],
+    },
+    {
+      id: '2',
+      category: 'legal',
+      type: 'contract',
+      properties: {
+        id: '67890',
+        client: 'XYZ Enterprises',
+        startDate: '2025-01-01',
+        endDate: '2026-01-01',
+      },
+      pages: [
+        {
+          uri: 'https://placehold.co/600x400',
+          metadata: { title: 'Contract Page 1' },
+          type: 'image/jpeg',
+        },
+        {
+          uri: 'https://placehold.co/600x400',
+          metadata: { title: 'Contract Page 2' },
+          type: 'image/jpeg',
+        },
+      ],
+    },
+  ];
+
+  console.log('workflow: ', {
+    ...workflow,
+    context: {
+      ...workflow?.context,
+      documents: [...sampleDocumentsData],
+    },
+    workflowDefinition: {
+      ...workflow?.workflowDefinition,
+      config: {
+        documentRequired: {
+          '1': { specific: true, category: 'financial', name: 'name of the document' },
+        },
+        failedState: ['sign_up'],
+      },
+    },
+  });
 
   return (
     <div className="h-full w-full p-4">
@@ -46,7 +108,24 @@ export const Entity = () => {
           }
           workflow={workflow as TWorkflowById}
         />
-        <EditableCase workflow={workflow} />
+        <EditableCase
+          workflow={{
+            ...workflow,
+            context: {
+              ...workflow?.context,
+              documents: [...sampleDocumentsData],
+            },
+            workflowDefinition: {
+              ...workflow?.workflowDefinition,
+              config: {
+                documentRequired: {
+                  '1': { specific: true, category: 'financial', name: 'name of the document' },
+                },
+                failedState: ['sign_up'],
+              },
+            },
+          }}
+        />
 
         {/* <Case.Content key={selectedEntity?.id}>
           {workflow?.workflowDefinition && (

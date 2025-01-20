@@ -29,3 +29,18 @@ export const tagToBadgeData = {
   ['board_resolution_uploaded']: { variant: 'info', text: 'Board Resolution Uploaded' },
   ['account_opened']: { variant: 'info', text: 'Account Opened' },
 } as const;
+
+export const statesToTitleCaseData = {
+  sign_up: 'Sign Up',
+  onboarded: 'Onboarded',
+  face_verification: 'Face Verification',
+  id_back_verification: 'Id Back Verification',
+  id_front_verification: 'Id Front Verification',
+  face_verification_failed: 'Face Verification Failed',
+  id_back_ocr_verification: 'Id Back Ocr Verification',
+  id_front_ocr_verification: 'Id Front Ocr Verification',
+  id_back_verification_failed: 'Id Back Verification Failed',
+  id_front_verification_failed: 'Id Front Verification Failed',
+  id_back_ocr_verification_failed: 'Id Back Ocr Verification Failed',
+  id_front_ocr_verification_failed: 'Id Front Ocr Verification Failed',
+};

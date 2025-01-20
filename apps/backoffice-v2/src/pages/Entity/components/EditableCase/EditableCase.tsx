@@ -7,6 +7,14 @@ import { Edit2 } from 'lucide-react';
 import { Input } from '@/common/components/atoms/Input/Input';
 import FileUploadSection from './FileUploadSection';
 import RenderForm from './RenderForm';
+import { SelectTrigger } from '@/common/components/atoms/Select/Select.Trigger';
+import { Select } from '@/common/components/atoms/Select/Select';
+import { Label } from '@/common/components/atoms/Label/Label';
+import { SelectContent } from '@/common/components/atoms/Select/Select.Content';
+import { SelectItem } from '@/common/components/atoms/Select/Select.Item';
+import { SelectGroup } from '@/common/components/atoms/Select/Select.Group';
+import { SelectValue } from '@/common/components/atoms/Select/Select.Value';
+import { statesToTitleCaseData } from '../Case/consts';
 
 const camelToTitleCase = (input: string): string => {
   return input
@@ -56,6 +64,11 @@ interface Workflow {
         [key: string]: { category: string; name: string; specific: boolean };
       };
       failedState: string[];
+    };
+    definition: {
+      id: string;
+      initial: string;
+      states: Array<{ [key: string]: unknown }>;
     };
   };
 }
@@ -167,6 +180,12 @@ const EditableCase: React.FC<EditableCaseProps> = ({ workflow }) => {
   const isFailedState =
     workflow.state && workflow.workflowDefinition.config.failedState?.includes(workflow.state);
 
+  const selectStateOptions = Object.keys(workflow.workflowDefinition.definition.states).map(
+    state => {
+      return { value: state, label: statesToTitleCaseData[state] || state };
+    },
+  );
+
   return (
     <div className="px-3">
       <Tabs tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} />
@@ -196,6 +215,25 @@ const EditableCase: React.FC<EditableCaseProps> = ({ workflow }) => {
                       className="space-y-4 px-4"
                     >
                       <RenderForm obj={formData} onChange={handleInputChange} />
+                      <Label>State</Label>
+                      <Select
+                        onValueChange={value => console.log(value)}
+                        defaultValue={workflow.state}
+                      >
+                        <SelectTrigger aria-label="State">
+                          <SelectValue placeholder="Select a state" />
+                        </SelectTrigger>
+                        <SelectContent className="z-[999999]">
+                          <SelectGroup>
+                            {selectStateOptions.map(item => (
+                              <SelectItem key={item.value} value={item.value}>
+                                {item.label}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+
                       {isFailedState && (
                         <FileUploadSection
                           documentRequired={workflow.workflowDefinition.config?.documentRequired}
