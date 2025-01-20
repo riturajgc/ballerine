@@ -19,11 +19,13 @@ import { SelectItem } from '@/common/components/atoms/Select/Select.Item';
 import { Switch } from '@/common/components/atoms/Switch';
 import { Label } from '@/common/components/atoms/Label/Label';
 import { Input } from '@/common/components/atoms/Input/Input';
+import { statesToTitleCaseData } from '../Case/consts';
 
 interface RenderFormProps {
   obj: Record<string, any>;
   onChange: (key: string, value: string | boolean | number) => void;
   errors?: Record<string, string>;
+  setCurrentState: React.Dispatch<React.SetStateAction<string>>;
 }
 
 interface FieldConfig {
@@ -46,7 +48,7 @@ const getFieldConfig = (key: string, value: any): FieldConfig => {
       validation: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
       errorMessage: 'Please enter a valid email address',
     },
-    phone: {
+    phoneNumber: {
       type: 'tel',
       validation: /^\+?[\d\s-]{10,}$/,
       errorMessage: 'Please enter a valid phone number',
@@ -74,7 +76,14 @@ const getFieldConfig = (key: string, value: any): FieldConfig => {
     enabled: {
       type: 'switch',
     },
+    state: {
+      type: 'select',
+      options: Object.keys(statesToTitleCaseData),
+    },
   };
+
+  // Check for exact match first
+  if (configs[key]) return configs[key];
 
   // Check for partial matches in the key
   const matchingKey = Object.keys(configs).find(configKey =>
@@ -94,6 +103,7 @@ const getFieldConfig = (key: string, value: any): FieldConfig => {
 const getIconForKey = (key: string) => {
   const iconMapping: Record<string, React.ReactNode> = {
     email: <Mail className="h-4 w-4" />,
+    phoneNumber: <Phone className="h-4 w-4" />,
     phone: <Phone className="h-4 w-4" />,
     date: <Calendar className="h-4 w-4" />,
     name: <User className="h-4 w-4" />,
@@ -101,6 +111,7 @@ const getIconForKey = (key: string) => {
     payment: <CreditCard className="h-4 w-4" />,
     company: <Building className="h-4 w-4" />,
     id: <Hash className="h-4 w-4" />,
+    state: <MapPin className="h-4 w-4" />, // Example icon for state
   };
 
   const matchingKey = Object.keys(iconMapping).find(mappingKey =>
@@ -118,7 +129,7 @@ const camelToTitleCase = (input: string): string => {
   return result.replace(/\s+/g, ' ');
 };
 
-const RenderForm: React.FC<RenderFormProps> = ({ obj, onChange, errors = {} }) => {
+const RenderForm: React.FC<RenderFormProps> = ({ obj, onChange, errors = {}, setCurrentState }) => {
   const renderField = (key: string, value: any, fieldConfig: FieldConfig) => {
     const commonProps = {
       id: key,
@@ -130,19 +141,30 @@ const RenderForm: React.FC<RenderFormProps> = ({ obj, onChange, errors = {} }) =
     switch (fieldConfig.type) {
       case 'textarea':
         return (
-          <TextArea {...commonProps} value={value} onChange={e => onChange(key, e.target.value)} />
+          <TextArea
+            {...commonProps}
+            value={value}
+            onChange={e => onChange(key, e.target.value)}
+            className={`w-full ${errors[key] ? 'border-red-500' : ''}`}
+          />
         );
 
       case 'select':
         return (
-          <Select value={String(value)} onValueChange={value => onChange(key, value)}>
+          <Select
+            value={String(value)}
+            onValueChange={value => {
+              onChange(key, value);
+              setCurrentState(value);
+            }}
+          >
             <SelectTrigger>
               <SelectValue placeholder={`Select ${camelToTitleCase(key)}`} />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-[999]">
               {fieldConfig.options?.map(option => (
                 <SelectItem key={option} value={option}>
-                  {option}
+                  {statesToTitleCaseData[option] || ''}
                 </SelectItem>
               ))}
             </SelectContent>

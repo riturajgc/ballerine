@@ -8,9 +8,7 @@ export const fetcher: IFetcher = async ({
   url,
   method,
   body,
-  headers = {
-    'Content-Type': 'application/json',
-  },
+  headers,
   options,
   timeout = 10000,
   schema,
@@ -18,23 +16,47 @@ export const fetcher: IFetcher = async ({
 }) => {
   const controller = new AbortController();
   const { signal } = controller;
+
+  // 1. Detect if it's FormData
+  const isFormData = body instanceof FormData;
+
+  // 2. Adjust headers accordingly
+  //    - If it's FormData, do NOT set the content-type to JSON
+  const finalHeaders = {
+    ...(headers || {}),
+  };
+  if (!isFormData && !finalHeaders['Content-Type']) {
+    finalHeaders['Content-Type'] = 'application/json';
+  }
+
+  // 3. Decide how to pass `body`
+  //    - If it's FormData, pass it as-is
+  //    - Else, if it's not GET and has a body, JSON.stringify it
+  const finalBody =
+    method !== 'GET' && body
+      ? isFormData
+        ? body
+        : JSON.stringify(body) // normal JSON payload
+      : undefined;
+
   const timeoutRef = setTimeout(() => {
     controller.abort(`Request timed out after ${timeout}ms`);
   }, timeout);
+
+  // 4. Make the request
   const [res, fetchError] = await handlePromise(
     fetch(url, {
       ...options,
       method,
       signal,
-      body: method !== 'GET' && body ? JSON.stringify(body) : undefined,
-      headers,
+      body: finalBody, // pass the properly formatted body
+      headers: finalHeaders,
     }),
   );
   clearTimeout(timeoutRef);
 
   if (fetchError) {
     console.error(fetchError);
-
     throw fetchError;
   }
 
@@ -43,7 +65,6 @@ export const fetcher: IFetcher = async ({
 
     if (res.status === 400) {
       const json = await res.json();
-
       if (Array.isArray(json?.errors)) {
         message = json?.errors?.map(({ message }) => `${message}\n`)?.join('');
       } else if (json.message) {
@@ -52,34 +73,30 @@ export const fetcher: IFetcher = async ({
     }
 
     console.error(message);
-
     throw new HttpError(res.status, message);
   }
 
+  // 5. Parse the response
   const parseResponse = async () => {
     if (res.status === 204) {
       return [undefined, undefined];
     }
-
     if (isBlob) {
       return await handlePromise(res.blob());
     }
-
     if (!res.headers.get('content-length') || res.headers.get('content-length') > '0') {
-      // TODO: make sure its json by checking the content-type in order to safe access to json method
       return await handlePromise(res.json());
     }
-
     return [undefined, undefined];
   };
   const [data, jsonError] = await parseResponse();
 
   if (jsonError) {
     console.error(jsonError);
-
     throw jsonError;
   }
 
+  // 6. Validate with zod (if schema is provided)
   const [validatedData, validationError] = await handlePromise(schema.parseAsync(data));
 
   if (validationError) {
@@ -88,7 +105,6 @@ export const fetcher: IFetcher = async ({
       : [validationError];
 
     terminal.error('❌ Validation error:\n', { messages, url });
-
     throw validationError;
   }
 

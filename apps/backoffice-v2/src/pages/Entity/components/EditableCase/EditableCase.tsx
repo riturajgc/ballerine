@@ -1,4 +1,4 @@
-import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
+import React, { useState, useEffect, FormEvent } from 'react';
 import { Button } from '@/common/components/atoms/Button/Button';
 import { ScrollArea } from '@/common/components/molecules/ScrollArea/ScrollArea';
 import { Modal } from '@/common/components/organisms/Modal/Modal';
@@ -7,24 +7,25 @@ import { Edit2 } from 'lucide-react';
 import { Input } from '@/common/components/atoms/Input/Input';
 import FileUploadSection from './FileUploadSection';
 import RenderForm from './RenderForm';
-import { SelectTrigger } from '@/common/components/atoms/Select/Select.Trigger';
-import { Select } from '@/common/components/atoms/Select/Select';
-import { Label } from '@/common/components/atoms/Label/Label';
-import { SelectContent } from '@/common/components/atoms/Select/Select.Content';
-import { SelectItem } from '@/common/components/atoms/Select/Select.Item';
-import { SelectGroup } from '@/common/components/atoms/Select/Select.Group';
-import { SelectValue } from '@/common/components/atoms/Select/Select.Value';
-import { statesToTitleCaseData } from '../Case/consts';
+import Tabs from './Tabs';
+import {
+  CaseManagementRequest,
+  CaseManagementResponse,
+  FileUploadFormData,
+  FileUploadResponse,
+  WorkflowUpdateBody,
+  WorkflowUpdateResponse,
+} from '../../hooks/useEntityLogic/useEntityLogic';
+
+interface RenderObjectProps {
+  obj: Record<string, any>;
+}
 
 const camelToTitleCase = (input: string): string => {
   return input
     .replace(/([a-z])([A-Z])/g, '$1 $2') // Adds space between camelCase words
     .replace(/\b\w/g, char => char.toUpperCase()); // Capitalizes first letter of each word
 };
-
-interface RenderObjectProps {
-  obj: Record<string, any>;
-}
 
 const RenderObject: React.FC<RenderObjectProps> = ({ obj }) => {
   return (
@@ -50,27 +51,42 @@ interface EditableCaseProps {
   workflow: Workflow;
 }
 
-interface Workflow {
-  context: {
-    entity: {
-      data: Record<string, any>;
-    };
-    documents?: Document[];
+interface WorkflowState {
+  tags: string[];
+  type?: 'final' | string;
+  on?: {
+    [event: string]: string;
   };
-  state: string;
-  workflowDefinition: {
-    config: {
-      documentRequired: {
-        [key: string]: { category: string; name: string; specific: boolean };
-      };
-      failedState: string[];
-    };
-    definition: {
-      id: string;
-      initial: string;
-      states: Array<{ [key: string]: unknown }>;
-    };
+}
+
+interface WorkflowStateDefinition {
+  id: string;
+  states: {
+    [stateName: string]: WorkflowState;
   };
+  initial: string;
+}
+
+interface DocumentRequirement {
+  name: string;
+  category: string;
+  specific: boolean;
+}
+
+interface WorkflowConfig {
+  failedStates: string[];
+  documentsRequired: {
+    [key: string]: DocumentRequirement[];
+  };
+}
+
+interface WorkflowDefinition {
+  id: string;
+  name: string;
+  config: WorkflowConfig;
+  variant: string;
+  version: number;
+  definition: WorkflowStateDefinition;
 }
 
 interface Document {
@@ -87,79 +103,127 @@ interface Page {
     title?: string;
   };
   type: string;
+  ballerineFileId: string;
 }
 
-interface Tab {
+interface Workflow {
+  context: {
+    id: string;
+    entity: {
+      data: Record<string, any>;
+      id: string;
+      type: string;
+      ballerineEntityId: string;
+    };
+    documents?: Document[];
+  };
+  metadata: any;
+  state: string;
   id: string;
-  label: string;
-  contentId: string;
+  workflowDefinition: WorkflowDefinition;
 }
 
-interface TabsProps {
-  tabs: Tab[];
-  activeTab: string;
-  onTabChange: (tabId: string) => void;
+interface EditableCaseProps {
+  workflow: Workflow;
+  uploadFile: (formData: FileUploadFormData) => Promise<FileUploadResponse>;
+  createCase: (caseData: CaseManagementRequest) => Promise<CaseManagementResponse>;
+  updateWorkflow: (
+    runtimeId: string,
+    updateData: WorkflowUpdateBody,
+  ) => Promise<WorkflowUpdateResponse>;
 }
 
-const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, onTabChange }) => {
-  return (
-    <div
-      role="tablist"
-      aria-orientation="horizontal"
-      className="mb-4 inline-flex h-auto flex-wrap items-center justify-center rounded-lg bg-[#F4F6FD] p-1 text-muted-foreground"
-      tabIndex={0}
-      style={{ outline: 'none' }}
-    >
-      {tabs.map(tab => (
-        <button
-          key={tab.id}
-          className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
-            activeTab === tab.id ? 'bg-background text-foreground shadow' : 'text-muted-foreground'
-          }`}
-          aria-disabled="false"
-          type="button"
-          role="tab"
-          aria-selected={activeTab === tab.id}
-          aria-controls={tab.contentId}
-          id={`trigger-${tab.id}`}
-          tabIndex={activeTab === tab.id ? 0 : -1}
-          onClick={() => onTabChange(tab.id)}
-        >
-          {tab.label}
-        </button>
-      ))}
-    </div>
-  );
-};
-
-const EditableCase: React.FC<EditableCaseProps> = ({ workflow }) => {
+const EditableCase: React.FC<EditableCaseProps> = ({
+  workflow,
+  uploadFile,
+  createCase,
+  updateWorkflow,
+}) => {
   const [activeTab, setActiveTab] = useState('summary');
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [formData, setFormData] = useState<Record<string, any>>({});
-  const [files, setFiles] = useState<Record<string, File | null>>({}); // Changed to use string keys based on document name
+  const [files, setFiles] = useState<Record<string, File | null>>({});
+  const [currentState, setCurrentState] = useState(workflow?.state);
+  const [uploadedFiles, setUploadedFiles] = useState<
+    { category: string; ballerineFileId: string; name: string }[]
+  >([]);
+  const isFailedState =
+    workflow.state && workflow.workflowDefinition.config.failedStates?.includes(workflow.state);
+
+  const failedDocuments = isFailedState
+    ? workflow.workflowDefinition.config.documentsRequired[workflow.state]?.filter(
+        doc => doc.specific === false,
+      )
+    : [];
+
+  const requiredDocuments = workflow.workflowDefinition.config.documentsRequired[
+    currentState
+  ]?.filter(
+    doc =>
+      doc.specific === false &&
+      !workflow.context.documents?.find(dc => dc.category === doc.category),
+  );
+
+  console.log('requiredDocuments: ', requiredDocuments);
 
   useEffect(() => {
     if (openModal && workflow?.context?.entity?.data) {
-      setFormData({ ...workflow.context.entity.data });
+      setFormData({ ...workflow.context.entity.data, state: workflow.state });
     }
-  }, [openModal, workflow?.context?.entity?.data]);
+  }, [openModal, workflow?.context?.entity?.data, workflow.state]);
 
-  const handleInputChange = (key: string, value: string) => {
+  // Handle text / input changes in the modal form
+  const handleInputChange = (key: string, value: string | boolean | number) => {
     setFormData(prevData => ({
       ...prevData,
       [key]: value,
     }));
   };
 
+  // Capture file changes from <FileUploadSection />
   const handleFileChange = (docName: string, file: File | null) => {
     setFiles(prev => ({ ...prev, [docName]: file }));
   };
 
+  // For demonstration only
   const handleSave = () => {
     updateWorkflowData(formData, files);
     setOpenModal(false);
+
+    console.log('---formData: ', formData);
+
+    const data = {
+      workflowId: workflow.workflowDefinition.id,
+      context: {
+        id: workflow.context.id,
+        entity: {
+          type: workflow.context.entity.type,
+          data: formData,
+          ballerineEntityId: workflow.context.entity.ballerineEntityId,
+          id: workflow.context.entity.id,
+        },
+        documents: uploadedFiles.map(file => ({
+          id: file.ballerineFileId,
+          category: file.category,
+          type: file.category,
+          version: 1,
+          issuingVersion: 1,
+          pages: [
+            {
+              ballerineFileId: file.ballerineFileId,
+            },
+          ],
+          properties: {},
+          metadata: {},
+        })),
+      },
+      metadata: workflow.metadata,
+    };
+    createCase(data);
+    updateWorkflow(workflow.id, { state: currentState, tags: [currentState] });
   };
 
+  // Replace with your real API call or logic to store updated data
   const updateWorkflowData = (
     updatedData: Record<string, any>,
     updatedFiles: Record<string, File | null>,
@@ -172,19 +236,11 @@ const EditableCase: React.FC<EditableCaseProps> = ({ workflow }) => {
     setActiveTab(tabId);
   };
 
+  // Example tabs
   const tabs = [
     { id: 'summary', label: 'Summary', contentId: 'content-summary' },
     { id: 'documents', label: 'Documents', contentId: 'content-documents' },
   ];
-
-  const isFailedState =
-    workflow.state && workflow.workflowDefinition.config.failedState?.includes(workflow.state);
-
-  const selectStateOptions = Object.keys(workflow.workflowDefinition.definition.states).map(
-    state => {
-      return { value: state, label: statesToTitleCaseData[state] || state };
-    },
-  );
 
   return (
     <div className="px-3">
@@ -212,34 +268,23 @@ const EditableCase: React.FC<EditableCaseProps> = ({ workflow }) => {
                         e.preventDefault();
                         handleSave();
                       }}
-                      className="space-y-4 px-4"
+                      className="mt-4 space-y-4 px-4"
                     >
-                      <RenderForm obj={formData} onChange={handleInputChange} />
-                      <Label>State</Label>
-                      <Select
-                        onValueChange={value => console.log(value)}
-                        defaultValue={workflow.state}
-                      >
-                        <SelectTrigger aria-label="State">
-                          <SelectValue placeholder="Select a state" />
-                        </SelectTrigger>
-                        <SelectContent className="z-[999999]">
-                          <SelectGroup>
-                            {selectStateOptions.map(item => (
-                              <SelectItem key={item.value} value={item.value}>
-                                {item.label}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
+                      <RenderForm
+                        obj={formData}
+                        onChange={handleInputChange}
+                        setCurrentState={setCurrentState}
+                      />
 
-                      {isFailedState && (
-                        <FileUploadSection
-                          documentRequired={workflow.workflowDefinition.config?.documentRequired}
-                          onFileChange={handleFileChange}
-                        />
-                      )}
+                      <FileUploadSection
+                        documentsRequired={requiredDocuments ?? []}
+                        onFileChange={handleFileChange}
+                        uploadFile={uploadFile}
+                        workflowRunTimeId={workflow.id}
+                        uploadedFiles={uploadedFiles}
+                        setUploadedFiles={setUploadedFiles}
+                      />
+
                       <div className="flex justify-end space-x-2">
                         <Button type="button" variant="outline" onClick={() => setOpenModal(false)}>
                           Cancel
@@ -266,16 +311,10 @@ const EditableCase: React.FC<EditableCaseProps> = ({ workflow }) => {
             </div>
           </div>
         )}
+
         {activeTab === 'documents' && (
           <div className="flex h-full flex-col gap-4">
             {workflow?.context.documents?.map((doc: Document, index: number) => {
-              const docRequirements =
-                workflow.workflowDefinition.config.documentRequired?.[doc.id] || [];
-              const renderButton =
-                workflow.state &&
-                workflow.workflowDefinition.config.failedState?.includes(workflow.state) &&
-                docRequirements.specific === true;
-
               return (
                 <div
                   key={doc.id}
@@ -286,18 +325,11 @@ const EditableCase: React.FC<EditableCaseProps> = ({ workflow }) => {
                       <h2 className="ml-1 mt-6 px-2 text-2xl font-bold">
                         {`${camelToTitleCase(doc.category)} - ${camelToTitleCase(doc.type)}`}
                       </h2>
-                      {renderButton && (
-                        <div className="mt-6 flex justify-end space-x-4 rounded p-2">
-                          {/* Add Buttons */}
-                          <Button size="sm" variant="warning" className="py-1">
-                            Re-upload the document
-                          </Button>
-                          <Button size="sm" variant="success" className="py-1">
-                            Accept
-                          </Button>
-                        </div>
-                      )}
+                      {/* Example: If you also want to show 'Re-upload' or 'Accept' 
+                          only if doc is required or if the state is failed, adapt this logic. */}
                     </div>
+
+                    {/* Document's properties */}
                     <div>
                       <div className="m-2 rounded p-1">
                         <div className="flex h-full flex-col">
@@ -307,12 +339,14 @@ const EditableCase: React.FC<EditableCaseProps> = ({ workflow }) => {
                         </div>
                       </div>
                     </div>
+
+                    {/* Document's pages or images */}
                     <MultiDocuments
                       value={{
                         isLoading: !!doc,
                         data: doc.pages.map((item: Page) => ({
-                          imageUrl: item.uri,
-                          title: item.metadata.title || '',
+                          imageUrl: item.ballerineFileId,
+                          title: '',
                           fileType: item.type,
                         })),
                       }}
