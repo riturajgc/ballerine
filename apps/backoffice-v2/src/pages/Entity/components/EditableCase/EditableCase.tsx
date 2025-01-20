@@ -16,6 +16,7 @@ import {
   WorkflowUpdateBody,
   WorkflowUpdateResponse,
 } from '../../hooks/useEntityLogic/useEntityLogic';
+import { useStorageFilesQuery } from '@/domains/storage/hooks/queries/useStorageFilesQuery/useStorageFilesQuery';
 
 interface RenderObjectProps {
   obj: Record<string, any>;
@@ -167,7 +168,7 @@ const EditableCase: React.FC<EditableCaseProps> = ({
       !workflow.context.documents?.find(dc => dc.category === doc.category),
   );
 
-  console.log('requiredDocuments: ', requiredDocuments);
+  console.log('requiredDocuments: ', requiredDocuments, currentState);
 
   useEffect(() => {
     if (openModal && workflow?.context?.entity?.data) {
@@ -244,6 +245,18 @@ const EditableCase: React.FC<EditableCaseProps> = ({
     { id: 'summary', label: 'Summary', contentId: 'content-summary' },
     { id: 'documents', label: 'Documents', contentId: 'content-documents' },
   ];
+
+  const balIds =
+    workflow.context.documents?.map(doc => doc.pages.map(page => page.ballerineFileId)).flat() ||
+    [];
+  const imageUris = useStorageFilesQuery(balIds);
+
+  const ballerineIdObj = balIds.reduce((acc: { [index: string]: string }, item, index) => {
+    acc[item] = imageUris[index]?.data as string;
+    return acc;
+  }, {});
+
+  console.log('test: ', imageUris);
 
   return (
     <div className="px-3">
@@ -329,10 +342,10 @@ const EditableCase: React.FC<EditableCaseProps> = ({
                         <span>{underscoreToTitleCase(doc.category)}</span>
                         {isFailedState &&
                           workflow?.workflowDefinition.config.documentsRequired[currentState]?.find(
-                            doc => doc.specific === true,
+                            dc => dc.specific === true && dc.category === doc.category,
                           ) && (
                             <div>
-                              <Button variant="warning">Re-upload the document</Button>{' '}
+                              <Button variant="warning">Re-upload the document</Button>
                               <Button variant="success">Accept</Button>
                             </div>
                           )}
@@ -353,11 +366,9 @@ const EditableCase: React.FC<EditableCaseProps> = ({
                     {/* Document's pages or images */}
                     <MultiDocuments
                       value={{
-                        isLoading: !!doc,
+                        isLoading: false,
                         data: doc.pages.map((item: Page) => ({
-                          imageUrl: '',
-                          title: '',
-                          fileType: item.type,
+                          imageUrl: ballerineIdObj[item.ballerineFileId],
                           id: item.ballerineFileId,
                         })),
                       }}
