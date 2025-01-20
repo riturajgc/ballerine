@@ -29,6 +29,7 @@ import { MerchantMonitoringBusinessReport } from '@/pages/MerchantMonitoringBusi
 import { MerchantMonitoringLayout } from '@/domains/business-reports/components/MerchantMonitoringLayout/MerchantMonitoringLayout';
 import { NotFoundRedirectWithProviders } from '@/pages/NotFound/NotFoundRedirectWithProviders';
 import { RouteErrorWithProviders } from '@/common/components/atoms/RouteError/RouteErrorWithProviders';
+import { Dashboard } from '@/pages/Dashboard/Dashboard.page';
 
 const router = createBrowserRouter([
   {
@@ -154,7 +155,7 @@ const router = createBrowserRouter([
                 children: [
                   {
                     path: '/:locale/home/statistics',
-                    element: <Statistics />,
+                    element: <Dashboard />,
                     errorElement: <RouteError />,
                   },
                   {
