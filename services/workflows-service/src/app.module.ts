@@ -50,6 +50,7 @@ import { NotionModule } from '@/notion/notion.module';
 import { SecretsManagerModule } from '@/secrets-manager/secrets-manager.module';
 import { WorkflowRunTimeHistoryModule } from './workflow-run-time-history/workflow-run-time-history.module';
 import { NotesModule } from './notes/notes.module';
+import { KafkaModule } from './kafka/kafka.module';
 
 export const validate = async (config: Record<string, unknown>) => {
   const zodEnvSchema = z
@@ -130,6 +131,7 @@ export const validate = async (config: Record<string, unknown>) => {
     SecretsManagerModule,
     WorkflowRunTimeHistoryModule,
     NotesModule,
+    KafkaModule
   ],
   providers: [
     {

@@ -85,6 +85,9 @@ export const serverEnvSchema = {
     .optional()
     .default('/dev/customers/')
     .describe('AWS Secrets Manager prefix'),
+  KAFKA_KEY: z.string().optional().describe('Kafka key'),
+  KAFKA_SECRET: z.string().optional().describe('Kafka secret'),
+  KAFKA_BROKERS: z.string().optional().describe('Kafka brokers'),
 };
 
 if (!process.env['ENVIRONMENT_NAME'] || process.env['ENVIRONMENT_NAME'] === 'local') {
