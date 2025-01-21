@@ -1,14 +1,14 @@
 import { CaseCreation } from '@/pages/Entities/components/CaseCreation';
 import { ctw } from '@ballerine/ui';
-import { FunctionComponent } from 'react';
-import { Outlet } from 'react-router-dom';
-import { TAssignee } from '../../common/components/atoms/AssignDropdown/AssignDropdown';
-import { MotionScrollArea } from '../../common/components/molecules/MotionScrollArea/MotionScrollArea';
-import { Pagination } from '../../common/components/organisms/Pagination/Pagination';
-import { Case } from '../Entity/components/Case/Case';
-import { Cases } from './components/Cases/Cases';
+import { FunctionComponent, useEffect } from 'react';
+import { TAssignee } from '@/common/components/atoms/AssignDropdown/AssignDropdown';
+import { MotionScrollArea } from '@/common/components/molecules/MotionScrollArea/MotionScrollArea';
+import { Pagination } from '@/common/components/organisms/Pagination/Pagination';
+import TableComponents from './components/Cases/Cases.Table';
 import { useEntities } from './hooks/useEntities/useEntities';
 import { NoCases } from '@/pages/Entities/components/NoCases/NoCases';
+import { Loader } from 'lucide-react';
+import { Cases } from './components/Cases/Cases';
 
 export const Entities: FunctionComponent = () => {
   const {
@@ -25,10 +25,15 @@ export const Entities: FunctionComponent = () => {
     caseCount,
     skeletonEntities,
     isManualCaseCreationEnabled,
+    workflowId,
   } = useEntities();
 
+  useEffect(() => {
+    console.log('cases: ', cases);
+  }, [cases]);
+
   return (
-    <>
+    <div className="h-full w-full">
       <Cases
         onSearch={onSearch}
         onFilter={onFilter}
@@ -36,6 +41,7 @@ export const Entities: FunctionComponent = () => {
         onSortDirToggle={onSortDirToggle}
         search={search}
         count={caseCount}
+        workflowId={workflowId}
       >
         <MotionScrollArea
           className={ctw({
@@ -43,13 +49,13 @@ export const Entities: FunctionComponent = () => {
             'h-[calc(100vh-240px)]': !isManualCaseCreationEnabled,
           })}
         >
-          <Cases.List>
+          <TableComponents.List>
             {isLoading
               ? skeletonEntities.map(index => (
-                  <Cases.SkeletonItem key={`cases-list-skeleton-${index}`} />
+                  <TableComponents.SkeletonItem key={`cases-list-skeleton-${index}`} />
                 ))
               : cases?.map(case_ => (
-                  <Cases.Item
+                  <TableComponents.Item
                     key={case_.id}
                     id={case_.id}
                     fullName={case_.entity.name}
@@ -65,9 +71,10 @@ export const Entities: FunctionComponent = () => {
                     }
                     tags={case_.tags}
                     entityAvatarUrl={case_.entity?.avatarUrl}
+                    status={case_.status}
                   />
                 ))}
-          </Cases.List>
+          </TableComponents.List>
         </MotionScrollArea>
         <div className={`divider my-0 px-4`}></div>
         <div className="flex flex-col gap-5 px-4">
@@ -75,23 +82,12 @@ export const Entities: FunctionComponent = () => {
           {isManualCaseCreationEnabled && <CaseCreation />}
         </div>
       </Cases>
-      {/* Display skeleton individual when loading the entities list */}
       {isLoading && (
-        <Case>
-          {/* Reject and approve header */}
-          <Case.Actions id={''} fullName={''} avatarUrl={''} />
-
-          <Case.Content>
-            <div>Hello ino</div>
-            <div>
-              <Case.FaceMatch faceAUrl={''} faceBUrl={''} isLoading />
-              <Case.Info info={{}} isLoading whitelist={[]} />
-            </div>
-            <Case.Documents documents={[]} isLoading />
-          </Case.Content>
-        </Case>
+        <div className="mt-4">
+          <Loader className="animate-pulse" />
+        </div>
       )}
-      {Array.isArray(cases) && !cases.length && !isLoading ? <NoCases /> : <Outlet />}
-    </>
+      {Array.isArray(cases) && !cases.length && !isLoading ? <NoCases /> : null}
+    </div>
   );
 };

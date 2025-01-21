@@ -13,8 +13,28 @@ import { handlePromise } from '../utils/handle-promise/handle-promise';
  * @param useCommonEndPoint - Determines whether to use the common base URL or the default base URL.
  * @param rest - Allows overriding any of the defaults set by the API client.
  */
-export const apiClient: IApiClient = async ({ endpoint, method, options, schema, useCommonEndPoint, ...rest }) =>
-  handlePromise(
+export const apiClient: IApiClient = async ({
+  endpoint,
+  method,
+  options,
+  schema,
+  useCommonEndPoint,
+  body,
+  ...rest
+}) => {
+  // Check if the body is a FormData instance
+  const isFormData = body instanceof FormData;
+  const headers = isFormData
+    ? {
+        ...(options?.headers ?? {}),
+        // note: do NOT explicitly set 'Content-Type' if body is FormData
+      }
+    : {
+        'Content-Type': 'application/json',
+        ...(options?.headers ?? {}),
+      };
+
+  return handlePromise(
     fetcher({
       url: useCommonEndPoint
         ? `${env.VITE_API_URL_COMMON}/${endpoint}`
@@ -24,11 +44,10 @@ export const apiClient: IApiClient = async ({ endpoint, method, options, schema,
         ...options,
         credentials: 'include',
       },
-      headers: {
-        'Content-Type': 'application/json',
-        ...(options?.headers ?? {}),
-      },
+      headers,
       schema,
+      body,
       ...rest,
     }),
   );
+};

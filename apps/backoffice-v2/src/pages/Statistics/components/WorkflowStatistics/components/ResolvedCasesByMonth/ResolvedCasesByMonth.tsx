@@ -23,9 +23,11 @@ export const ResolvedCasesByMonth: FunctionComponent<{
   return (
     <div className={'col-span-2 min-h-[26.875rem] rounded-xl bg-[#F6F6F6] p-2'}>
       <Card className={'flex h-full flex-col px-3'}>
-        <CardHeader className={'pb-1'}>Resolved Cases by Month</CardHeader>
+        <CardHeader className={'pb-1 text-lg font-semibold'}>Resolved Cases by Month</CardHeader>
         <CardContent>
-          <p className={'mb-8 text-slate-400'}>All resolved cases regardless of the decision.</p>
+          <p className={'text-md mb-8 text-slate-400'}>
+            All resolved cases regardless of the decision.
+          </p>
           <ResponsiveContainer width="100%" height={400}>
             <BarChart
               data={resolvedCasesByMonth}

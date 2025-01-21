@@ -1,4 +1,4 @@
-import { FunctionComponent } from 'react';
+import { FunctionComponent, useState } from 'react';
 import { Checkbox } from '@/common/components/atoms/Checkbox/Checkbox';
 import { FilterSvg, MagnifyingGlassSvg, SortSvg } from '@/common/components/atoms/icons';
 import { TIndividual } from '@/domains/individuals/types';
@@ -7,6 +7,8 @@ import { List } from './Cases.List';
 import { SkeletonItem } from './Cases.SkeletonItem';
 import { useCases } from './hooks/useCases/useCases';
 import { ICasesChildren, ICasesProps } from './interfaces';
+import { Button } from '@/common/components/atoms/Button/Button';
+import { CreateTicket } from '@/pages/Entity/components/Case/CreateTicket';
 
 /**
  * @description A vertical sidebar for the cases list, with search, filter, and sort.
@@ -35,6 +37,7 @@ export const Cases: FunctionComponent<ICasesProps> & ICasesChildren = ({
   onSortDirToggle,
   search,
   count,
+  workflowId,
   ...props
 }) => {
   const {
@@ -47,6 +50,15 @@ export const Cases: FunctionComponent<ICasesProps> & ICasesChildren = ({
     filterRef,
     handleDropdown,
   } = useCases();
+
+  const [isModalOpen, setModalOpen] = useState(false);
+  const handleAddClick = () => {
+    setModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+  };
 
   return (
     <div
@@ -143,9 +155,16 @@ export const Cases: FunctionComponent<ICasesProps> & ICasesChildren = ({
             </div>
           </div>
         </div>
-        <div className="mt-4 text-sm font-semibold text-[#999999]">
-          {Intl.NumberFormat().format(count)} {count === 1 ? 'case' : 'cases'}
+        <div className="mt-4 flex w-full justify-between">
+          <span className="text-sm font-semibold text-[#999999]">
+            {Intl.NumberFormat().format(count)} {count === 1 ? 'case' : 'cases'}
+          </span>
+          <Button size="md" variant="success" onClick={handleAddClick}>
+            Add Ticket
+          </Button>
         </div>
+
+        <CreateTicket isOpen={isModalOpen} onClose={handleCloseModal} workflowId={workflowId} />
       </div>
       {children}
     </div>

@@ -107,14 +107,12 @@ const router = createBrowserRouter([
                     element: <Entities />,
                     loader: entitiesLoader,
                     errorElement: <RouteError />,
-                    children: [
-                      {
-                        path: '/:locale/case-management/entities/:entityId',
-                        element: <Entity />,
-                        loader: entityLoader,
-                        errorElement: <RouteError />,
-                      },
-                    ],
+                  },
+                  {
+                    path: '/:locale/case-management/entities/:entityId',
+                    element: <Entity />,
+                    loader: entityLoader,
+                    errorElement: <RouteError />,
                   },
                 ],
               },

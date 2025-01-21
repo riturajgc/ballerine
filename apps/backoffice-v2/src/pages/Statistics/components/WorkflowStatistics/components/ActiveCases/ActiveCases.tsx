@@ -15,7 +15,7 @@ export const ActiveCases: FunctionComponent<{
   return (
     <div className={'col-span-full min-h-[12.375rem] rounded-xl bg-[#F6F6F6] p-2'}>
       <Card className={'flex h-full flex-col px-3'}>
-        <CardHeader className={'pb-1'}>Active Cases</CardHeader>
+        <CardHeader className={'pb-1 text-lg font-semibold'}>Active Cases</CardHeader>
         <CardContent>
           <div className={'flex space-x-5 pt-3'}>
             <PieChart width={70} height={70}>
@@ -57,7 +57,7 @@ export const ActiveCases: FunctionComponent<{
             <ul className={'w-full max-w-sm'}>
               {visibleActiveCases?.map(({ name, color, value }) => {
                 return (
-                  <li key={name} className={'flex items-center space-x-4 text-xs'}>
+                  <li key={name} className={'flex items-center space-x-4 text-base'}>
                     <span
                       className="flex h-2 w-2 rounded-full"
                       style={{

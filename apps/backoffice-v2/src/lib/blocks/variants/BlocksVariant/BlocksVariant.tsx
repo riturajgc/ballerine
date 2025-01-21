@@ -19,15 +19,17 @@ export const BlocksVariant: FunctionComponent<{
     'variant' | 'config' | 'version' | 'name'
   >;
 }> = ({ workflowDefinition }) => {
+  console.log('workflowDefinition: ', workflowDefinition);
+
   const isKybExampleVariant = checkIsKybExampleVariant(workflowDefinition);
   const isManualReviewVariant = checkIsManualReviewVariant(workflowDefinition);
   const isWebsiteMonitoringVariant = checkIsWebsiteMonitoringVariant(workflowDefinition);
   const isOngoingVariant =
     checkIsOngoingVariant(workflowDefinition) || checkIsAmlVariant(workflowDefinition);
-  console.log('isKybExampleVariant: ', isKybExampleVariant)
-  console.log('isManualReviewVariant: ', isManualReviewVariant)
-  console.log('isWebsiteMonitoringVariant: ', isWebsiteMonitoringVariant)
-  console.log('isOngoingVariant: ', isOngoingVariant)
+  console.log('isKybExampleVariant: ', isKybExampleVariant);
+  console.log('isManualReviewVariant: ', isManualReviewVariant);
+  console.log('isWebsiteMonitoringVariant: ', isWebsiteMonitoringVariant);
+  console.log('isOngoingVariant: ', isOngoingVariant);
   if (isWebsiteMonitoringVariant) {
     return <WebsiteMonitoringBlocks />;
   }

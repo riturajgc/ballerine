@@ -42,15 +42,6 @@ export const Actions: FunctionComponent<IActionsProps> = ({
     isWorkflowCompleted,
   } = useCaseActionsLogic({ workflowId: id, fullName });
 
-  const [isModalOpen, setModalOpen] = useState(false);
-  const handleAddClick = () => {
-    setModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setModalOpen(false);
-  };
-
   return (
     <div className={`col-span-2 space-y-2 bg-base-100 px-4 pt-4`}>
       <div className={`mb-8 flex flex-row justify-between space-x-3.5`}>
@@ -65,7 +56,7 @@ export const Actions: FunctionComponent<IActionsProps> = ({
         />
         <CaseOptions />
       </div>
-      <div className={`min-h-20 flex justify-between gap-4`}>
+      <div className={`flex min-h-20 justify-between gap-4`}>
         <div className={`flex flex-col space-y-3`}>
           <h2
             className={ctw(`w-full max-w-[35ch] break-all text-4xl font-semibold leading-9`, {
@@ -102,17 +93,7 @@ export const Actions: FunctionComponent<IActionsProps> = ({
             }}
           />
         )}
-        <div className={`flex flex-wrap items-center gap-4 self-start pe-[3.35rem]`}>
-          <Button
-          size="md"
-          variant="success"
-          onClick={handleAddClick}
-        >
-          Add Ticket
-        </Button>
-        </div>
       </div>
-      <CreateTicket isOpen={isModalOpen} onClose={handleCloseModal} workflowId={workflowDefinition?.id}/>
     </div>
   );
 };
