@@ -551,72 +551,60 @@ async function seed() {
         id: 'onboarding',
         states: {
           onboarded: {
-            type: 'final',
             tags: ['onboarded'],
-          },
-          id_nfc_verification: {
-            tags: ['id_nfc_verification'],
-            on: {
-              failure: 'id_nfc_verification_failed',
-              success: 'face_verification',
-            },
-          },
-          id_nfc_verification_failed: {
-            tags: ['id_nfc_verification_failed'],
-            on: {
-              manual_approval: 'face_verification',
-            },
-          },
-          id_back_ocr_verification: {
-            tags: ['id_back_ocr_verification'],
-            on: {
-              failure: 'id_back_ocr_verification_failed',
-              success: 'id_nfc_verification',
-            },
-          },
-          id_front_ocr_verification: {
-            tags: ['id_front_ocr_verification'],
-            on: {
-              failure: 'id_front_ocr_verification_failed',
-              success: 'id_back_ocr_verification',
-            },
-          },
-          id_back_verification_failed: {
-            tags: ['id_back_verification_failed'],
-            on: {
-              manual_approval: 'face_verification',
-            },
-          },
-          id_front_verification_failed: {
-            tags: ['id_front_verification_failed'],
-            on: {
-              manual_approval: 'id_back_verification',
-            },
-          },
-          id_back_ocr_verification_failed: {
-            tags: ['id_back_ocr_verification_failed'],
-            on: {
-              manual_approval: 'id_nfc_verification',
-            },
-          },
-          id_front_ocr_verification_failed: {
-            tags: ['id_front_ocr_verification_failed'],
-            on: {
-              manual_approval: 'id_back_ocr_verification',
-            },
+            type: 'final',
           },
           face_verification: {
-            tags: ['face_verification'],
             on: {
               failure: 'face_verification_failed',
               success: 'onboarded',
             },
+            tags: ['face_verification'],
+          },
+          id_nfc_verification: {
+            on: {
+              failure: 'id_nfc_verification_failed',
+              success: 'face_verification',
+            },
+            tags: ['id_nfc_verification'],
           },
           face_verification_failed: {
-            tags: ['face_verification_failed'],
             on: {
               manual_approval: 'onboarded',
             },
+            tags: ['face_verification_failed'],
+          },
+          id_back_ocr_verification: {
+            on: {
+              failure: 'id_back_ocr_verification_failed',
+              success: 'id_nfc_verification',
+            },
+            tags: ['id_back_ocr_verification'],
+          },
+          id_front_ocr_verification: {
+            on: {
+              failure: 'id_front_ocr_verification_failed',
+              success: 'id_back_ocr_verification',
+            },
+            tags: ['id_front_ocr_verification'],
+          },
+          id_nfc_verification_failed: {
+            on: {
+              manual_approval: 'face_verification',
+            },
+            tags: ['id_nfc_verification_failed'],
+          },
+          id_back_ocr_verification_failed: {
+            on: {
+              manual_approval: 'id_nfc_verification',
+            },
+            tags: ['id_back_ocr_verification_failed'],
+          },
+          id_front_ocr_verification_failed: {
+            on: {
+              manual_approval: 'id_back_ocr_verification',
+            },
+            tags: ['id_front_ocr_verification_failed'],
           },
         },
         initial: 'id_front_ocr_verification',
