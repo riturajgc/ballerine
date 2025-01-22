@@ -1,6 +1,7 @@
 import { env } from '@/env';
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { Kafka } from 'kafkajs';
+import { KafkaMessageService } from './kafka-message.service';
 
 @Injectable()
 export class KafkaService implements OnModuleInit, OnModuleDestroy {
@@ -10,7 +11,9 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
   private readonly topic = 'test_consumer';
   private readonly groupId = 'test_consumer_group';
 
-  constructor() {
+  constructor(
+    private readonly kafkaMessageService: KafkaMessageService,
+  ) {
     console.log('KAFKA_BROKERS:', env.KAFKA_BROKERS);
     console.log('KAFKA_KEY:', env.KAFKA_KEY);
     console.log('KAFKA_SECRET:', env.KAFKA_SECRET);
@@ -39,7 +42,9 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
 
     await this.consumer.run({
       eachMessage: async ({ topic, partition, message }: any) => {
-        this.handleKafkaMessage(message.value.toString());
+        const value = message.value.toString();
+        const key = message.key.toString();
+        this.handleKafkaMessage(value, key);
       },
     });
   }
@@ -49,7 +54,11 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
     this.logger.log('Kafka consumer disconnected.');
   }
 
-  handleKafkaMessage(message: string) {
-    console.log('Handling message:', message);
+  handleKafkaMessage(messageValue: any, messageKey: any) {
+    console.log('Handling message:', messageValue, messageKey);
+    if(!messageValue) {
+      return;
+    }
+    return this.kafkaMessageService.handleMessage(messageValue, messageKey);
   }
 }
