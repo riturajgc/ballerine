@@ -9,6 +9,9 @@ import { ProjectIds } from '@/common/decorators/project-ids.decorator';
 import type { TProjectId, TProjectIds } from '@/types';
 import { CurrentProject } from '@/common/decorators/current-project.decorator';
 import { UserStatus } from '@prisma/client';
+import { ChangePasswordDto } from './dtos/change-password.dto';
+import type { Request } from 'express';
+import { LocalAuthGuard } from '@/auth/local/local-auth.guard';
 
 @swagger.ApiExcludeController()
 @common.Controller('internal/users')
@@ -67,5 +70,14 @@ export class UserControllerInternal {
       },
       projectIds?.[0] || currentProjectId,
     );
+  }
+
+  @common.Post('/change-password')
+  async changePassword(
+    @common.Body() changePasswordInfo: ChangePasswordDto,
+    @common.Request() req: Request,
+  ) {
+    console.log('request user', req.user);
+    return this.service.changePassword(changePasswordInfo, req.user);
   }
 }
