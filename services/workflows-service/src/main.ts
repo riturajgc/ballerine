@@ -57,6 +57,7 @@ const main = async () => {
       origin: corsOrigins,
       credentials: true,
     },
+    logger: ['debug', 'error', 'log', 'verbose', 'warn'],
   });
 
   const logger = app.get(AppLoggerService);
