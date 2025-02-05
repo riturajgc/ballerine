@@ -57,6 +57,12 @@ export class UserRepository {
     return this.prisma.user.findMany(scopedArgs);
   }
 
+  async findManyUnscoped<T extends Prisma.UserFindManyArgs>(
+    args: Prisma.SelectSubset<T, Prisma.UserFindManyArgs>
+  ): Promise<User[]> {
+    return this.prisma.user.findMany(args);
+  }
+
   async findById<T extends Omit<Prisma.UserFindFirstOrThrowArgs, 'where'>>(
     id: string,
     args: Prisma.SelectSubset<T, Omit<Prisma.UserFindFirstOrThrowArgs, 'where'>>,
