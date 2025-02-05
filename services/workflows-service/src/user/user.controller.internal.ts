@@ -11,6 +11,7 @@ import { CurrentProject } from '@/common/decorators/current-project.decorator';
 import { UserStatus } from '@prisma/client';
 import { ChangePasswordDto } from './dtos/change-password.dto';
 import type { Request } from 'express';
+import { UserUpdateDto } from './dtos/user-update';
 
 @swagger.ApiExcludeController()
 @common.Controller('internal/users')
@@ -60,6 +61,26 @@ export class UserControllerInternal {
     })[]
   > {
     return this.service.listMetrics(startDate, endDate);
+  }
+
+  @common.Patch(':id')
+  @swagger.ApiOkResponse({ type: UserModel })
+  @swagger.ApiForbiddenResponse()
+  async update(
+    @common.Param('id') id: string,
+    @common.Body() userUpdateInfo: UserUpdateDto,
+  ): Promise<UserModel> {
+    return this.service.updateById(id, {
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        roles: true,
+      },
+      data: userUpdateInfo,
+    });
   }
 
   @common.Post()
