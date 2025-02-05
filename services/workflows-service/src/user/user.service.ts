@@ -4,6 +4,7 @@ import type { TProjectId, TProjectIds } from '@/types';
 import { ProjectScopeService } from '@/project/project-scope.service';
 import { ChangePasswordDto } from './dtos/change-password.dto';
 import { PasswordService } from '@/auth/password/password.service';
+import { User, WorkflowRuntimeDataStatus } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -65,11 +66,9 @@ export class UserService {
     if (newPassword !== confirmNewPassword) {
       throw new Error('Passwords do not match');
     }
-    console.log(user.user.id, '/////////////');
     const existingUser = await this.repository.findByIdUnscoped(user?.user?.id!, {
       select: { password: true },
     });
-    console.log(existingUser, '/////////////');
     if (!existingUser) {
       throw new Error('User not found');
     }
@@ -78,5 +77,59 @@ export class UserService {
       throw new Error('Old password is incorrect');
     }
     return this.repository.updateByIdUnscoped(user?.user?.id!, { data: { password: 'admin13' } });
+  }
+
+//  TODO: implement avg TAT time here after required changes
+  async listMetrics(startDate: string, endDate: string) {
+    const usersWithRuntimeDataCounts = (await this.repository.findManyUnscoped({
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        lastActiveAt: true,
+        status: true,
+        workflowRuntimeData: {
+          select: {
+            status: true,
+          },
+        },
+      },
+      where: {
+        createdAt: {
+          gte: new Date(startDate),
+          lte: new Date(endDate),
+        },
+      },
+    })) as (User & { workflowRuntimeData: { status: WorkflowRuntimeDataStatus }[] })[];
+
+    if (!usersWithRuntimeDataCounts?.length) {
+      return [];
+    }
+
+    const userCounts = usersWithRuntimeDataCounts.map(user => {
+      const statusCounts = user.workflowRuntimeData.reduce(
+        (acc, data) => {
+          acc[data.status] = (acc[data.status] || 0) + 1;
+          return acc;
+        },
+        { active: 0, completed: 0, failed: 0 },
+      );
+
+      return {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
+        lastActiveAt: user.lastActiveAt,
+        status: user.status,
+        statusCounts,
+        totalRuntimeData: user.workflowRuntimeData.length,
+      };
+    });
+
+    return userCounts;
   }
 }

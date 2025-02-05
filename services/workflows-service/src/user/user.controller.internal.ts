@@ -11,7 +11,6 @@ import { CurrentProject } from '@/common/decorators/current-project.decorator';
 import { UserStatus } from '@prisma/client';
 import { ChangePasswordDto } from './dtos/change-password.dto';
 import type { Request } from 'express';
-import { LocalAuthGuard } from '@/auth/local/local-auth.guard';
 
 @swagger.ApiExcludeController()
 @common.Controller('internal/users')
@@ -43,6 +42,24 @@ export class UserControllerInternal {
       },
       projectId ? [projectId] : projectIds,
     );
+  }
+
+  @common.Get('/list-metrics')
+  @swagger.ApiForbiddenResponse()
+  async listMetrics(
+    @common.Query('startDate') startDate: string,
+    @common.Query('endDate') endDate: string,
+  ): Promise<
+    (Partial<UserModel> & {
+      statusCounts: {
+        active: number;
+        completed: number;
+        failed: number;
+      };
+      totalRuntimeData: number;
+    })[]
+  > {
+    return this.service.listMetrics(startDate, endDate);
   }
 
   @common.Post()
@@ -77,7 +94,6 @@ export class UserControllerInternal {
     @common.Body() changePasswordInfo: ChangePasswordDto,
     @common.Request() req: Request,
   ) {
-    console.log('request user', req.user);
     return this.service.changePassword(changePasswordInfo, req.user);
   }
 }
