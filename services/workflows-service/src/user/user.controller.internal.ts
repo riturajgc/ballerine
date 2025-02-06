@@ -50,6 +50,7 @@ export class UserControllerInternal {
   async listMetrics(
     @common.Query('startDate') startDate: string,
     @common.Query('endDate') endDate: string,
+    @common.Query('search') search?: string,
   ): Promise<
     (Partial<UserModel> & {
       statusCounts: {
@@ -60,7 +61,7 @@ export class UserControllerInternal {
       totalRuntimeData: number;
     })[]
   > {
-    return this.service.listMetrics(startDate, endDate);
+    return this.service.listMetrics(startDate, endDate, search);
   }
 
   @common.Patch(':id')

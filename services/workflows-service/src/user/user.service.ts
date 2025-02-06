@@ -79,7 +79,7 @@ export class UserService {
     return this.repository.updateByIdUnscoped(user?.user?.id!, { data: { password: 'admin13' } });
   }
 
-  async listMetrics(startDate: string, endDate: string) {
+  async listMetrics(startDate: string, endDate: string, search?: string) {
     const usersWithRuntimeDataCounts = (await this.repository.findManyUnscoped({
       select: {
         id: true,
@@ -102,8 +102,26 @@ export class UserService {
           lte: new Date(endDate),
         },
         status: UserStatus.Active,
+        OR: search
+          ? [
+              {
+                firstName: {
+                  contains: search,
+                  mode: 'insensitive',
+                },
+              },
+              {
+                lastName: {
+                  contains: search,
+                  mode: 'insensitive',
+                },
+              },
+            ]
+          : undefined,
       },
-    })) as (User & { workflowRuntimeData: { status: WorkflowRuntimeDataStatus, resolutionTime?: number }[] })[];
+    })) as (User & {
+      workflowRuntimeData: { status: WorkflowRuntimeDataStatus; resolutionTime?: number }[];
+    })[];
 
     if (!usersWithRuntimeDataCounts?.length) {
       return [];
