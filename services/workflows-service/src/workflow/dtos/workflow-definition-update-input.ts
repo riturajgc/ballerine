@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsObject, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsNumber, IsObject, IsOptional, IsString } from 'class-validator';
 import { WorkflowRuntimeDataStatus } from '@prisma/client';
 import type { TStateTags } from '@ballerine/common';
 
@@ -51,4 +51,8 @@ export class WorkflowDefinitionUpdateInput {
   @IsString()
   @IsOptional()
   assigneeId?: string;
+
+  @IsNumber()
+  @IsOptional()
+  resolutionTime?: number;
 }

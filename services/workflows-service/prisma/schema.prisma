@@ -234,6 +234,7 @@ model WorkflowRuntimeData {
   assignedAt                DateTime?
   salesforceObjectName      String?
   salesforceRecordId        String?
+  resolutionTime            Int?                       
 
   parentRuntimeDataId       String?                    @map("parent_runtime_data_id")
   parentWorkflowRuntimeData WorkflowRuntimeData?       @relation("ParentChild", fields: [parentRuntimeDataId], references: [id])

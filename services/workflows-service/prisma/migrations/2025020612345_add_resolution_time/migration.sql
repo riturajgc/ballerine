@@ -1,0 +1,1 @@
+ALTER TABLE "WorkflowRuntimeData" ADD COLUMN "resolutionTime" INTEGER;
