@@ -4,7 +4,7 @@ import type { TProjectId, TProjectIds } from '@/types';
 import { ProjectScopeService } from '@/project/project-scope.service';
 import { ChangePasswordDto } from './dtos/change-password.dto';
 import { PasswordService } from '@/auth/password/password.service';
-import { User, WorkflowRuntimeDataStatus } from '@prisma/client';
+import { User, UserStatus, WorkflowRuntimeDataStatus } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -101,6 +101,7 @@ export class UserService {
           gte: new Date(startDate),
           lte: new Date(endDate),
         },
+        status: UserStatus.Active,
       },
     })) as (User & { workflowRuntimeData: { status: WorkflowRuntimeDataStatus }[] })[];
 
