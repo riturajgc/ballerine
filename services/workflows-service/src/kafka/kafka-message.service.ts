@@ -1,16 +1,18 @@
 import { CaseManagementService } from '@/case-management/case-management.service';
 import { PrismaService } from '@/prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
-import  { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+import { KafkaMessage } from './types/kafka-message';
+import { KafkaMessageFlow } from './enums/kafka-message-flow.enum';
 
 @Injectable()
 export class KafkaMessageService {
   constructor(
     private readonly caseManagementService: CaseManagementService,
-    private readonly prismaClient: PrismaClient
+    private readonly prismaClient: PrismaClient,
   ) {}
 
-  async handleMessage(messageValue: any, messageKey: any) {
+  async handleMessage(messageValue: KafkaMessage, messageKey: any) {
     console.log('Handling message:', messageValue);
     if (!this.validateMessage(messageValue)) {
       console.error('Invalid message:', messageValue);
@@ -30,20 +32,19 @@ export class KafkaMessageService {
     }
   }
 
-  async handleOnboardingMessages(messageValue: any) {
-    const workflowDefinitionId = 'sr-onboarding';
-    const entityId = messageValue.identifier;
-    const projectId = 'project-1';
-    const files = messageValue.files;
-    const data = messageValue.data;
-    const existingRunTime = await this.prismaClient.workflowRuntimeData.findUnique({
-      where: {
-        endUserId: entityId,
-        workflowDefinitionId,
-        projectId,
-      },
-    });
-
+  async handleOnboardingMessages(messageValue: KafkaMessage) {
+    //const workflowDefinitionId = 'sr-onboarding';
+    //const entityId = messageValue.identifier;
+    //const projectId = 'project-1';
+    //const files = messageValue.files;
+    //const data = messageValue.data;
+    //const existingRunTime = await this.prismaClient.workflowRuntimeData.findUnique({
+    //  where: {
+    //    endUserId: entityId,
+    //    workflowDefinitionId,
+    //    projectId,
+    //  },
+    //});
     //let workflowRunDto = {
     //  workflowId: workflowDefinitionId,
     //  context: {
@@ -57,7 +58,6 @@ export class KafkaMessageService {
     //  },
     //  metadata: {},
     //};
-
     //if (existingRunTime) {
     //  workflowRunDto = {
     //    ...existingRunTime!,
@@ -75,7 +75,6 @@ export class KafkaMessageService {
     //    metadata: {},
     //  };
     //}
-
     //try {
     //  const result = await this.caseManagementService.create(
     //    workflowRunDto,
@@ -87,12 +86,21 @@ export class KafkaMessageService {
     //}
   }
 
-  validateMessage(messageValue: any) {
+  validateMessage(messageValue: KafkaMessage) {
     let isValid = true;
     if (!messageValue.identifier) {
       isValid = false;
     }
     if (!messageValue.type) {
+      isValid = false;
+    }
+    if (!messageValue.flow) {
+      isValid = false;
+    }
+    if (messageValue.flow && !Object.values(KafkaMessageFlow).includes(messageValue?.flow)) {
+      isValid = false;
+    }
+    if (messageValue.files && !Array.isArray(messageValue.files)) {
       isValid = false;
     }
     return isValid;

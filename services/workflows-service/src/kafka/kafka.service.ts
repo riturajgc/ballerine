@@ -33,7 +33,6 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
     console.log('Connecting to Kafka broker...');
     this.consumer = this.kafka.consumer({ groupId: this.groupId });
 
-    console.log('Connecting to Kafka broker...');
     await this.consumer.connect();
     this.logger.log('Kafka consumer connected.');
 
@@ -42,6 +41,7 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
 
     await this.consumer.run({
       eachMessage: async ({ topic, partition, message }: any) => {
+        console.log('Received message:', message)
         const value = message.value.toString();
         const key = message.key.toString();
         this.handleKafkaMessage(value, key);
@@ -55,7 +55,6 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
   }
 
   handleKafkaMessage(messageValue: any, messageKey: any) {
-    console.log('Handling message:', messageValue, messageKey);
     if(!messageValue) {
       return;
     }
