@@ -90,7 +90,7 @@ import {
 import { Static } from '@sinclair/typebox';
 import { plainToClass } from 'class-transformer';
 import dayjs from 'dayjs';
-import { isEqual, merge } from 'lodash';
+import { isEqual, lte, merge } from 'lodash';
 import mime from 'mime';
 import { WorkflowDefinitionCreateDto } from './dtos/workflow-definition-create';
 import { WorkflowDefinitionFindManyArgs } from './dtos/workflow-definition-find-many-args';
@@ -453,6 +453,130 @@ export class WorkflowService {
     );
   }
 
+  async listWorkflowRuntimeDataWithRelationsV2(
+    {
+      entityType,
+      orderBy,
+      page,
+      filters,
+      search
+    }: {
+      entityType: 'individuals' | 'businesses';
+      orderBy: Parameters<typeof toPrismaOrderBy>[0];
+      page: {
+        number: number;
+        size: number;
+      };
+      filters?: {
+        assigneeId?: Array<string | null>;
+        status?: WorkflowRuntimeDataStatus[];
+        caseStatus?: string[];
+        nationalId?: string;
+        workflowDefinitionIds?: string[];
+        startDate?: Date;
+        endDate?: Date;
+      };
+      search?: string;
+    },
+    projectIds: TProjectIds,
+  ) {
+    const skip = (page.number - 1) * page.size;
+
+    const whereQuery: any = {};
+
+    if(filters?.workflowDefinitionIds) {
+        whereQuery.workflowDefinitionId = { in: filters.workflowDefinitionIds };
+    }
+
+    if(filters?.status) {
+        whereQuery.status = { in: filters.status };
+    }
+
+    if(filters?.startDate && filters?.endDate) {
+        whereQuery.createdAt = { gte: filters.startDate, lte: filters.endDate };
+    }
+
+    if(filters?.assigneeId) {
+        whereQuery.assigneeId = { in: filters.assigneeId };
+    }
+
+    if(filters?.nationalId) {
+        whereQuery.endUser = {
+            nationalId: { contains: filters.nationalId },
+        };
+    }
+
+    if(search) {
+        whereQuery.OR = [
+            {
+                endUser: {
+                    firstName: { contains: search }
+                }
+            },
+            {
+                endUser: {
+                    lastName: { contains: search }
+                }
+            },
+            {
+                endUser: {
+                    nationalId: { contains: search }
+                }
+            }
+        ];
+    }
+    const workflowsQuery: any = {
+      where: whereQuery,
+      orderBy: orderBy ? toPrismaOrderBy(orderBy, entityType) : undefined,
+    };
+
+    const [workflowCount, workflows] = await Promise.all([
+      this.workflowRuntimeDataRepository.count({ where: workflowsQuery.where }, projectIds),
+      this.workflowRuntimeDataRepository.findMany(
+        {
+          where: workflowsQuery.where,
+          orderBy: workflowsQuery.orderBy,
+          skip,
+          take: page.size,
+          include: {
+            assignee: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                }
+            },
+            endUser: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true
+                }
+            },
+            workflowDefinition: {
+                select: {
+                    id: true,
+                    name: true
+                }
+            }
+          }
+        },
+        projectIds,
+      ),
+    ]);
+
+    if (page.number > 1 && workflowCount < skip + 1) {
+      throw new NotFoundException('Page not found');
+    }
+    return {
+      data: this.formatWorkflowsRuntimeData(workflows as unknown as TWorkflowWithRelations[]),
+      meta: {
+        totalItems: workflowCount,
+        totalPages: Math.max(Math.ceil(workflowCount / page.size), 1),
+      },
+    };
+  }
+
   async listWorkflowRuntimeDataWithRelations(
     {
       args,
@@ -474,6 +598,7 @@ export class WorkflowService {
         assigneeId?: Array<string | null>;
         status?: WorkflowRuntimeDataStatus[];
         caseStatus?: string[];
+        nationalId?: string;
       };
     },
     projectIds: TProjectIds,
@@ -567,6 +692,9 @@ export class WorkflowService {
         id: workflow?.id,
         status: workflow?.status,
         createdAt: workflow?.createdAt,
+        updatedAt: workflow?.updatedAt,
+        state: workflow?.state,
+        resolvedAt: workflow?.resolvedAt,
         entity: {
           id: isIndividual ? workflow?.endUser?.id : workflow?.business?.id,
           name: isIndividual
@@ -583,9 +711,14 @@ export class WorkflowService {
               firstName: workflow?.assignee?.firstName,
               lastName: workflow?.assignee?.lastName,
               avatarUrl: workflow?.assignee?.avatarUrl,
+              name: `${workflow?.assignee?.firstName} ${workflow?.assignee?.lastName}`,
             }
           : null,
         tags: workflow?.tags,
+        workflow: {
+            id: workflow?.workflowDefinition?.id,
+            name: workflow?.workflowDefinition?.name,
+        }
       };
     });
   }
@@ -1255,7 +1388,7 @@ export class WorkflowService {
           // @ts-ignore - error from Prisma types fix
           entityId: updatedResult.businessId || updatedResult.endUserId,
           correlationId,
-          transaction
+          transaction,
         });
       }
 

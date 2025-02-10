@@ -12,6 +12,39 @@ class FilterDto {
 
   @ApiProperty()
   caseStatus?: string[];
+
+  @ApiProperty()
+  nationalId?: string;
+
+  @ApiProperty()
+  workflowDefinitionIds?: string[];
+
+  @ApiProperty()
+  startDate?: Date;
+  
+  @ApiProperty()
+  endDate?: Date;
+}
+
+export class FindWorkflowsListDtoV2 {
+    
+    @ApiProperty()
+    orderBy!: string;
+    
+    @ApiProperty()
+    page!: PageDto;
+    
+    @ApiProperty()
+    limit!: number;
+    
+    @ApiProperty()
+    search?: string;
+    
+    @ApiProperty()
+    filter?: FilterDto;
+
+    @ApiProperty()
+    entityType?: string;
 }
 
 export class FindWorkflowsListDto {
@@ -32,7 +65,31 @@ export class FindWorkflowsListDto {
 
   @ApiProperty()
   filter?: FilterDto;
+
+  @ApiProperty()
+  entityType?: string;
 }
+
+
+export const FindWorkflowsListSchemaV2 = z.object({
+    orderBy: z.string(),
+    search: z.string().optional(),
+    page: z.object({
+      number: z.coerce.number().int().positive(),
+      size: z.coerce.number().int().positive(),
+    }),
+    filter: z
+      .object({
+        assigneeId: z
+          .array(z.union([z.literal('').transform(() => null), z.string().nonempty()]))
+          .optional(),
+        status: z.array(z.nativeEnum(WorkflowRuntimeDataStatus)).optional(),
+        caseStatus: z.array(z.string()).optional(),
+        nationalId: z.string().optional(),
+        workflowDefinitionIds: z.array(z.string()).optional(),
+      })
+      .optional(),
+  });
 
 export const FindWorkflowsListSchema = z.object({
   filterId: z.string(),
