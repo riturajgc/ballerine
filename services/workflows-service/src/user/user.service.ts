@@ -79,8 +79,7 @@ export class UserService {
     return this.repository.updateByIdUnscoped(user?.user?.id!, { data: { password: 'admin13' } });
   }
 
-//  TODO: implement avg TAT time here after required changes
-  async listMetrics(startDate: string, endDate: string) {
+  async listMetrics(startDate: string, endDate: string, search?: string) {
     const usersWithRuntimeDataCounts = (await this.repository.findManyUnscoped({
       select: {
         id: true,
@@ -93,6 +92,7 @@ export class UserService {
         workflowRuntimeData: {
           select: {
             status: true,
+            resolutionTime: true,
           },
         },
       },
@@ -102,8 +102,26 @@ export class UserService {
           lte: new Date(endDate),
         },
         status: UserStatus.Active,
+        OR: search
+          ? [
+              {
+                firstName: {
+                  contains: search,
+                  mode: 'insensitive',
+                },
+              },
+              {
+                lastName: {
+                  contains: search,
+                  mode: 'insensitive',
+                },
+              },
+            ]
+          : undefined,
       },
-    })) as (User & { workflowRuntimeData: { status: WorkflowRuntimeDataStatus }[] })[];
+    })) as (User & {
+      workflowRuntimeData: { status: WorkflowRuntimeDataStatus; resolutionTime?: number }[];
+    })[];
 
     if (!usersWithRuntimeDataCounts?.length) {
       return [];
@@ -118,6 +136,13 @@ export class UserService {
         { active: 0, completed: 0, failed: 0 },
       );
 
+      const totalResolutionTime = user.workflowRuntimeData.reduce((acc, data) => {
+        if (data.resolutionTime) {
+          acc += data.resolutionTime;
+        }
+        return acc;
+      }, 0);
+
       return {
         id: user.id,
         firstName: user.firstName,
@@ -128,6 +153,8 @@ export class UserService {
         status: user.status,
         statusCounts,
         totalRuntimeData: user.workflowRuntimeData.length,
+        averageResolutionTime:
+          statusCounts.completed > 0 ? totalResolutionTime / statusCounts.completed : undefined,
       };
     });
 

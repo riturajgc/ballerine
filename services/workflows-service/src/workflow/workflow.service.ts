@@ -90,7 +90,7 @@ import {
 import { Static } from '@sinclair/typebox';
 import { plainToClass } from 'class-transformer';
 import dayjs from 'dayjs';
-import { isEqual, merge } from 'lodash';
+import { isEqual, lte, merge } from 'lodash';
 import mime from 'mime';
 import { WorkflowDefinitionCreateDto } from './dtos/workflow-definition-create';
 import { WorkflowDefinitionFindManyArgs } from './dtos/workflow-definition-find-many-args';
@@ -453,6 +453,130 @@ export class WorkflowService {
     );
   }
 
+  async listWorkflowRuntimeDataWithRelationsV2(
+    {
+      entityType,
+      orderBy,
+      page,
+      filters,
+      search
+    }: {
+      entityType: 'individuals' | 'businesses';
+      orderBy: Parameters<typeof toPrismaOrderBy>[0];
+      page: {
+        number: number;
+        size: number;
+      };
+      filters?: {
+        assigneeId?: Array<string | null>;
+        status?: WorkflowRuntimeDataStatus[];
+        caseStatus?: string[];
+        nationalId?: string;
+        workflowDefinitionIds?: string[];
+        startDate?: Date;
+        endDate?: Date;
+      };
+      search?: string;
+    },
+    projectIds: TProjectIds,
+  ) {
+    const skip = (page.number - 1) * page.size;
+
+    const whereQuery: any = {};
+
+    if(filters?.workflowDefinitionIds) {
+        whereQuery.workflowDefinitionId = { in: filters.workflowDefinitionIds };
+    }
+
+    if(filters?.status) {
+        whereQuery.status = { in: filters.status };
+    }
+
+    if(filters?.startDate && filters?.endDate) {
+        whereQuery.createdAt = { gte: filters.startDate, lte: filters.endDate };
+    }
+
+    if(filters?.assigneeId) {
+        whereQuery.assigneeId = { in: filters.assigneeId };
+    }
+
+    if(filters?.nationalId) {
+        whereQuery.endUser = {
+            nationalId: { contains: filters.nationalId },
+        };
+    }
+
+    if(search) {
+        whereQuery.OR = [
+            {
+                endUser: {
+                    firstName: { contains: search }
+                }
+            },
+            {
+                endUser: {
+                    lastName: { contains: search }
+                }
+            },
+            {
+                endUser: {
+                    nationalId: { contains: search }
+                }
+            }
+        ];
+    }
+    const workflowsQuery: any = {
+      where: whereQuery,
+      orderBy: orderBy ? toPrismaOrderBy(orderBy, entityType) : undefined,
+    };
+
+    const [workflowCount, workflows] = await Promise.all([
+      this.workflowRuntimeDataRepository.count({ where: workflowsQuery.where }, projectIds),
+      this.workflowRuntimeDataRepository.findMany(
+        {
+          where: workflowsQuery.where,
+          orderBy: workflowsQuery.orderBy,
+          skip,
+          take: page.size,
+          include: {
+            assignee: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                }
+            },
+            endUser: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true
+                }
+            },
+            workflowDefinition: {
+                select: {
+                    id: true,
+                    name: true
+                }
+            }
+          }
+        },
+        projectIds,
+      ),
+    ]);
+
+    if (page.number > 1 && workflowCount < skip + 1) {
+      throw new NotFoundException('Page not found');
+    }
+    return {
+      data: this.formatWorkflowsRuntimeData(workflows as unknown as TWorkflowWithRelations[]),
+      meta: {
+        totalItems: workflowCount,
+        totalPages: Math.max(Math.ceil(workflowCount / page.size), 1),
+      },
+    };
+  }
+
   async listWorkflowRuntimeDataWithRelations(
     {
       args,
@@ -474,6 +598,7 @@ export class WorkflowService {
         assigneeId?: Array<string | null>;
         status?: WorkflowRuntimeDataStatus[];
         caseStatus?: string[];
+        nationalId?: string;
       };
     },
     projectIds: TProjectIds,
@@ -567,6 +692,9 @@ export class WorkflowService {
         id: workflow?.id,
         status: workflow?.status,
         createdAt: workflow?.createdAt,
+        updatedAt: workflow?.updatedAt,
+        state: workflow?.state,
+        resolvedAt: workflow?.resolvedAt,
         entity: {
           id: isIndividual ? workflow?.endUser?.id : workflow?.business?.id,
           name: isIndividual
@@ -583,9 +711,14 @@ export class WorkflowService {
               firstName: workflow?.assignee?.firstName,
               lastName: workflow?.assignee?.lastName,
               avatarUrl: workflow?.assignee?.avatarUrl,
+              name: `${workflow?.assignee?.firstName} ${workflow?.assignee?.lastName}`,
             }
           : null,
         tags: workflow?.tags,
+        workflow: {
+            id: workflow?.workflowDefinition?.id,
+            name: workflow?.workflowDefinition?.name,
+        }
       };
     });
   }
@@ -831,14 +964,14 @@ export class WorkflowService {
         projectIds,
         transaction,
       );
-      console.log('#####step 1')
+      console.log('#####step 1');
       const workflowDefinition = await this.workflowDefinitionRepository.findById(
         workflow?.workflowDefinitionId,
         {},
         projectIds,
         transaction,
       );
-      console.log('#####step 2')
+      console.log('#####step 2');
       // `name` is always `approve` and not `approved` etc.
       const Status = {
         approve: 'approved',
@@ -847,7 +980,7 @@ export class WorkflowService {
         revised: 'revised',
       } as const;
       const status = decision.status ? Status[decision.status] : null;
-      console.log('#####step 3')
+      console.log('#####step 3');
       const newDecision = (() => {
         if (!status || status === 'approved') {
           return {
@@ -875,14 +1008,14 @@ export class WorkflowService {
 
         throw new BadRequestException(`Invalid decision status: ${status}`);
       })();
-      console.log('#####step 4')
+      console.log('#####step 4');
       const documents = this.getDocuments(workflow.context, documentsUpdateContextMethod);
-      console.log('#####step 5')
+      console.log('#####step 5');
       let document = documents.find((document: any) => document.id === documentId);
-      console.log('#####step 6')
+      console.log('#####step 6');
       const updatedStatus =
         (documentId === document.id ? status : document?.decision?.status) ?? undefined;
-      console.log('#####step 7')
+      console.log('#####step 7');
       const updatedContext = this.updateDocumentInContext(
         workflow.context,
         {
@@ -898,13 +1031,13 @@ export class WorkflowService {
         },
         documentsUpdateContextMethod,
       );
-      console.log('#####step 8')
+      console.log('#####step 8');
       document = this.getDocuments(updatedContext, documentsUpdateContextMethod)?.find(
         (document: any) => document.id === documentId,
       );
-      console.log('#####step 9')
+      console.log('#####step 9');
       this.__validateWorkflowDefinitionContext(workflowDefinition, updatedContext);
-      console.log('#####step 10')
+      console.log('#####step 10');
       const documentWithDecision = {
         ...document,
         id: document.id,
@@ -914,7 +1047,7 @@ export class WorkflowService {
         },
       };
       const validateDocumentSchema = status === 'approved';
-      console.log('#####step 11')
+      console.log('#####step 11');
       const updatedWorkflow = await this.updateDocumentById(
         {
           workflowId,
@@ -926,13 +1059,13 @@ export class WorkflowService {
         projectIds![0]!,
         transaction,
       );
-      console.log('#####step 12')
+      console.log('#####step 12');
       logDocumentWithoutId({
         line: 'updateDocumentDecisionById 770',
         logger: this.logger,
         workflowRuntimeData: updatedWorkflow,
       });
-      console.log('#####step 13')
+      console.log('#####step 13');
       return updatedWorkflow;
     }, defaultPrismaTransactionOptions);
   }
@@ -1236,6 +1369,18 @@ export class WorkflowService {
 
       if (isResolved) {
         this.logger.log('Workflow resolved', { id: workflowRuntimeId });
+        //const resolutionTime = runtimeData.resolvedAt
+        //  ? new Date(runtimeData.resolvedAt).getTime() - new Date(runtimeData.createdAt).getTime()
+        //  : new Date().getTime() - new Date(runtimeData.createdAt).getTime();
+        //const resolutionTimeInMins = Math.round(resolutionTime / (1000 * 60));
+        //await this.updateWorkflowRuntimeData(
+        //  runtimeData.id,
+        //  {
+        //    resolutionTime: resolutionTimeInMins,
+        //  },
+        //  runtimeData.projectId,
+        //  transaction,
+        //);
 
         this.workflowEventEmitter.emit('workflow.completed', {
           runtimeData: updatedResult,
@@ -1243,6 +1388,7 @@ export class WorkflowService {
           // @ts-ignore - error from Prisma types fix
           entityId: updatedResult.businessId || updatedResult.endUserId,
           correlationId,
+          transaction,
         });
       }
 
@@ -1421,7 +1567,7 @@ export class WorkflowService {
         currentProjectId,
       );
       const entityType = context.entity.type === 'business' ? 'business' : 'endUser';
-      console.log('entityId: ', entityId, ' entityType: ', entityType)
+      console.log('entityId: ', entityId, ' entityType: ', entityType);
       const existingWorkflowRuntimeData =
         await this.workflowRuntimeDataRepository.findActiveWorkflowByEntityAndLock(
           {
@@ -1432,7 +1578,7 @@ export class WorkflowService {
           projectIds,
           transaction,
         );
-      console.log('existingWorkflowRuntimeData: ', existingWorkflowRuntimeData)
+      console.log('existingWorkflowRuntimeData: ', existingWorkflowRuntimeData);
       let contextToInsert = structuredClone(context);
 
       // @ts-ignore
@@ -1548,17 +1694,15 @@ export class WorkflowService {
 
         // here we can track run time history
         const historyObject = {
-            workflowRunTimeId: workflowRuntimeData.id,
-            action: 'create',
-            note: `${workflowDefinition.name} ticket created`,
-            metadata: {
-                entityId: entityId,
-                entityType: entityType,
-            }
-        }
-        await this.workflowRunTimeHistoryService.create(
-            historyObject
-        );
+          workflowRunTimeId: workflowRuntimeData.id,
+          action: 'create',
+          note: `${workflowDefinition.name} ticket created`,
+          metadata: {
+            entityId: entityId,
+            entityType: entityType,
+          },
+        };
+        await this.workflowRunTimeHistoryService.create(historyObject);
 
         logDocumentWithoutId({
           line: 'createOrUpdateWorkflow 1476',
@@ -1567,8 +1711,9 @@ export class WorkflowService {
         });
 
         let endUserId: string;
-        console.log('mergedConfig: ', mergedConfig)
-        if (true) { //temp
+        console.log('mergedConfig: ', mergedConfig);
+        if (true) {
+          //temp
           if (entityType === 'endUser') {
             endUserId = entityId;
             entities.push({ type: 'individual', id: entityId });
@@ -1592,15 +1737,17 @@ export class WorkflowService {
           }
 
           const nowPlus30Days = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-          workflowToken = (await this.workflowTokenService.create(
-            currentProjectId,
-            {
-              workflowRuntimeDataId: workflowRuntimeData.id,
-              endUserId: endUserId,
-              expiresAt: nowPlus30Days,
-            },
-            transaction,
-          )).token;
+          workflowToken = (
+            await this.workflowTokenService.create(
+              currentProjectId,
+              {
+                workflowRuntimeDataId: workflowRuntimeData.id,
+                endUserId: endUserId,
+                expiresAt: nowPlus30Days,
+              },
+              transaction,
+            )
+          ).token;
 
           workflowRuntimeData = await this.workflowRuntimeDataRepository.updateStateById(
             workflowRuntimeData.id,
@@ -1652,7 +1799,10 @@ export class WorkflowService {
         this.logger.log('documents', contextToInsert.documents);
 
         contextToInsert.documents = assignIdToDocuments(contextToInsert.documents);
-        const documentsToInsert = this.updateOrInsertDocuments(existingWorkflowRuntimeData.context.documents, contextToInsert.documents);
+        const documentsToInsert = this.updateOrInsertDocuments(
+          existingWorkflowRuntimeData.context.documents,
+          contextToInsert.documents,
+        );
         contextToInsert.documents = documentsToInsert;
         const documentsWithPersistedImages = await this.copyDocumentsPagesFilesAndCreate(
           contextToInsert?.documents,
@@ -1667,12 +1817,15 @@ export class WorkflowService {
         };
         const entityDataToInsert = {
           ...existingWorkflowRuntimeData.context.entity.data,
-          ...contextToInsert.entity.data
-        }
-        console.log('existingWorkflowRuntimeData.context.entity.data: ', existingWorkflowRuntimeData.context.entity.data);
+          ...contextToInsert.entity.data,
+        };
+        console.log(
+          'existingWorkflowRuntimeData.context.entity.data: ',
+          existingWorkflowRuntimeData.context.entity.data,
+        );
         console.log('new: ', contextToInsert.entity.data);
         contextToInsert.entity.data = entityDataToInsert;
-        console.log('add contextToInsert.entity.data: ', contextToInsert.entity.data)
+        console.log('add contextToInsert.entity.data: ', contextToInsert.entity.data);
         workflowRuntimeData = await this.workflowRuntimeDataRepository.updateStateById(
           existingWorkflowRuntimeData.id,
           {
@@ -1690,19 +1843,17 @@ export class WorkflowService {
         );
 
         const historyObject = {
-            workflowRunTimeId: workflowRuntimeData.id,
-            action: 'update',
-            note: `${workflowDefinition.name} ticket Updated`,
-            metadata: {
-                entityId: entityId,
-                entityType: entityType,
-                documents: documentsToInsert,
-                entity: contextToInsert.entity.data
-            }
-        }
-        await this.workflowRunTimeHistoryService.create(
-            historyObject
-        );
+          workflowRunTimeId: workflowRuntimeData.id,
+          action: 'update',
+          note: `${workflowDefinition.name} ticket Updated`,
+          metadata: {
+            entityId: entityId,
+            entityType: entityType,
+            documents: documentsToInsert,
+            entity: contextToInsert.entity.data,
+          },
+        };
+        await this.workflowRunTimeHistoryService.create(historyObject);
 
         logDocumentWithoutId({
           line: 'createOrUpdateWorkflow 1584',
@@ -1719,7 +1870,7 @@ export class WorkflowService {
         entityType,
         newWorkflowCreated,
       });
-      console.log('I am here, ', workflowToken)
+      console.log('I am here, ', workflowToken);
       return [
         {
           workflowDefinition,
@@ -1727,7 +1878,7 @@ export class WorkflowService {
           workflowToken,
           ballerineEntityId: entityId,
           entities,
-          newWorkflowCreated
+          newWorkflowCreated,
         },
       ] as const;
     });
@@ -2234,20 +2385,36 @@ export class WorkflowService {
         transaction,
       );
 
-      const historyObject = {
-            workflowRunTimeId: updatedRuntimeData.id,
-            action: 'state_change',
-            note: `${workflowDefinition.name} ticket state changed from ${currentState} to ${updatedRuntimeData.state}`,
-            metadata: {
-                entityId: entityId,
-                entityType: entityType,
-                newState: updatedRuntimeData.state,
-                previousState: currentState
-            }
+      if (isFinal) {
+        if (updatedRuntimeData.endUserId) {
+          const endUser = await this.endUserService.getById(
+            updatedRuntimeData.endUserId,
+            {},
+            projectIds,
+          );
+          if (endUser?.correlationId) {
+            this.workflowEventEmitter.emit('workflow.completed', {
+              runtimeData: updatedRuntimeData,
+              state: updatedRuntimeData.state,
+              entityId: updatedRuntimeData.endUserId,
+              correlationId: endUser.correlationId,
+            });
+          }
+        }
       }
-        await this.workflowRunTimeHistoryService.create(
-            historyObject
-        );
+
+      const historyObject = {
+        workflowRunTimeId: updatedRuntimeData.id,
+        action: 'state_change',
+        note: `${workflowDefinition.name} ticket state changed from ${currentState} to ${updatedRuntimeData.state}`,
+        metadata: {
+          entityId: entityId,
+          entityType: entityType,
+          newState: updatedRuntimeData.state,
+          previousState: currentState,
+        },
+      };
+      await this.workflowRunTimeHistoryService.create(historyObject);
 
       if (workflowRuntimeData.parentRuntimeDataId) {
         await this.persistChildWorkflowToParent(
@@ -2507,10 +2674,12 @@ export class WorkflowService {
 
   updateOrInsertDocuments(existingDocuments: any[], newDocuments: any[]): any[] {
     const updatedDocuments = [...existingDocuments]; // Clone existing documents
-  
+
     newDocuments.forEach(newDoc => {
-        // if uploaded document with same id or type, should be replaced
-      const index = updatedDocuments.findIndex(doc => (doc.type === newDoc.type || doc.id === newDoc.id));
+      // if uploaded document with same id or type, should be replaced
+      const index = updatedDocuments.findIndex(
+        doc => doc.type === newDoc.type || doc.id === newDoc.id,
+      );
       if (index !== -1) {
         // Document with the same type exists, update ballerineFileId
         updatedDocuments[index] = { ...updatedDocuments[index], pages: newDoc.pages };
@@ -2519,7 +2688,7 @@ export class WorkflowService {
         updatedDocuments.push(newDoc);
       }
     });
-  
+
     return updatedDocuments;
   }
 

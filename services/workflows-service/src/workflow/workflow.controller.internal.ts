@@ -17,8 +17,10 @@ import {
 } from '@/workflow/dtos/find-workflow.dto';
 import {
   FindWorkflowsListDto,
+  FindWorkflowsListDtoV2,
   FindWorkflowsListLogicSchema,
   FindWorkflowsListSchema,
+  FindWorkflowsListSchemaV2,
 } from '@/workflow/dtos/find-workflows-list.dto';
 import { WorkflowAssigneeId } from '@/workflow/dtos/workflow-assignee-id';
 import { WorkflowDefinitionCloneDto } from '@/workflow/dtos/workflow-definition-clone';
@@ -101,6 +103,32 @@ export class WorkflowControllerInternal {
         page,
         filters,
         search,
+      },
+      projectIds,
+    );
+  }
+
+  @common.Get('/v2')
+  @swagger.ApiOkResponse()
+  @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @swagger.ApiForbiddenResponse({ type: errors.ForbiddenException })
+  @ApiNestedQuery(FindWorkflowsListDtoV2)
+  @UsePipes(new ZodValidationPipe(FindWorkflowsListSchemaV2, 'query'))
+  async listWorkflowRuntimeDataV2(
+    @ProjectIds() projectIds: TProjectIds,
+    @common.Query()
+    { page, filter: filters, orderBy, entityType, search }: FindWorkflowsListDtoV2,
+  ) {
+
+    const entityTypeValue = entityType ?? "individuals";
+
+    return await this.service.listWorkflowRuntimeDataWithRelationsV2(
+      {
+        entityType: entityTypeValue as "individuals" | "businesses",
+        orderBy: orderBy as any,
+        page,
+        filters,
+        search
       },
       projectIds,
     );

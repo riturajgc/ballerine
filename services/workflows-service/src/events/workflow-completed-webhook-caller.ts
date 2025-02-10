@@ -13,6 +13,7 @@ import { StateTag } from '@ballerine/common';
 import { sign } from '@/common/utils/sign/sign';
 import type { TAuthenticationConfiguration } from '@/customer/types';
 import { CustomerService } from '@/customer/customer.service';
+import { PrismaTransaction } from '@/types';
 
 @Injectable()
 export class WorkflowCompletedWebhookCaller {
@@ -40,14 +41,27 @@ export class WorkflowCompletedWebhookCaller {
     });
   }
 
-  async handleWorkflowEvent(data: ExtractWorkflowEventData<'workflow.completed'>) {
+  async handleWorkflowEvent(data: ExtractWorkflowEventData<'workflow.completed'> & { transaction?: PrismaTransaction  }) {
     this.logger.log('handleWorkflowEvent:: ', {
       state: data.state,
       entityId: data.entityId,
       correlationId: data.correlationId,
       id: data.runtimeData.id,
     });
-
+    // if the workflow is completed, then store the completed time for this
+    const resolutionTime = data.runtimeData.resolvedAt
+      ? new Date(data.runtimeData.resolvedAt).getTime() -
+        new Date(data.runtimeData.createdAt).getTime()
+      : new Date().getTime() - new Date(data.runtimeData.createdAt).getTime();
+    const resolutionTimeInMins = Math.round(resolutionTime / (1000 * 60));
+    await this.workflowService.updateWorkflowRuntimeData(
+      data.runtimeData.id,
+      {
+        resolutionTime: resolutionTimeInMins,
+      },
+      data.runtimeData.projectId,
+      data.transaction
+    );
     const webhooks = getWebhooks(
       data.runtimeData.config,
       this.configService.get('ENVIRONMENT_NAME'),
