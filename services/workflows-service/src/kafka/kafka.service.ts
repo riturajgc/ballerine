@@ -46,6 +46,8 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
         const key = message.key.toString();
         this.handleKafkaMessage(value, key);
       },
+      heartbeatInterval: 5000,
+      sessionTimeout: 60000
     });
   }
 

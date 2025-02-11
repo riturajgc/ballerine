@@ -7,6 +7,7 @@ import { CaseManagementModule } from '@/case-management/case-management.module';
 import { WorkflowModule } from '@/workflow/workflow.module';
 import { UserModule } from '@/user/user.module';
 import { PrismaClient } from '@prisma/client';
+import { WorkflowService } from '@/workflow/workflow.service';
 
 @Module({
   providers: [
