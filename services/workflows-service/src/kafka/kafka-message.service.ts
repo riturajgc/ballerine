@@ -3,7 +3,6 @@ import { Injectable } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { KafkaMessage } from './types/kafka-message';
 import { KafkaMessageFlow } from './enums/kafka-message-flow.enum';
-import { WorkflowActionEvent } from './enums/workflow-action-event.enum';
 import { WorkflowService } from '@/workflow/workflow.service';
 
 @Injectable()
@@ -44,6 +43,10 @@ export class KafkaMessageService {
       },
       documents: [],
     };
+
+    if(data.emiratesId) {
+      data.nationalId = data.emiratesId;
+    }
 
     if (existingRunTime) {
       return {
@@ -145,9 +148,6 @@ export class KafkaMessageService {
       isValid = false;
     }
     if (messageValue.files && !Array.isArray(messageValue.files)) {
-      isValid = false;
-    }
-    if (messageValue.event && !Object.values(WorkflowActionEvent).includes(messageValue?.event)) {
       isValid = false;
     }
     return isValid;
